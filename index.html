@@ -7,6 +7,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="icon" type="image/png" href="https://upload.wikimedia.org/wikipedia/commons/a/a0/Logo_dppi_512.png">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 
   <style>
     :root {
@@ -29,20 +30,17 @@
     .btn-submit:hover { background: var(--color-primary-hover); }
     
     /* Dashboard Screen */
-    #adminDashboard { display: none; padding: 20px; max-width: 1400px; margin: 0 auto; }
+    #adminDashboard { display: none; padding: 20px; max-width: 1200px; margin: 0 auto; }
     .header-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; background: var(--bg-card); padding: 20px 30px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid var(--border-color); }
     .table-container { background: var(--bg-card); border-radius: 16px; overflow-x: auto; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid var(--border-color); }
-    table { width: 100%; border-collapse: collapse; min-width: 1200px; }
+    table { width: 100%; border-collapse: collapse; min-width: 900px; }
     th { background: var(--color-primary); color: white; padding: 16px; text-align: left; font-size: 13px; font-weight: 600; white-space: nowrap; }
     td { padding: 16px; border-bottom: 1px solid #eee; font-size: 13px; }
     tr:hover { background: #fdfbf9; }
     
-    /* Buttons Status */
-    .btn-action { padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; border: none; transition: 0.2s; margin-right: 4px; display: inline-block; margin-bottom: 4px;}
-    .btn-lolos { background: #10B981; color: white; }
-    .btn-lolos:hover { background: #059669; }
-    .btn-gagal { background: #EF4444; color: white; }
-    .btn-gagal:hover { background: #DC2626; }
+    /* Tombol Aksi Tabel */
+    .btn-detail { background: #EAE4DB; color: var(--text-main); padding: 6px 16px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; border: 1px solid var(--border-color); transition: 0.2s; display: inline-flex; align-items: center; gap: 6px;}
+    .btn-detail:hover { background: var(--border-color); }
     
     .status-badge { padding: 4px 10px; border-radius: 100px; font-size: 11px; font-weight: 600; display: inline-block; white-space: nowrap;}
     .badge-pending { background: #FEF3C7; color: #D97706; }
@@ -51,18 +49,136 @@
 
     .logout-btn { color: var(--color-primary); font-weight: 600; cursor: pointer; text-decoration: underline; font-size: 14px; }
     
-    .loading-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.8); z-index: 100; justify-content: center; align-items: center; flex-direction: column; }
+    /* MODAL POP-UP STYLES */
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 50; justify-content: center; align-items: center; padding: 20px;}
+    .modal-container { background: var(--bg-card); width: 100%; max-width: 600px; border-radius: 20px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); border: 1px solid var(--border-color); overflow: hidden; display: flex; flex-direction: column; max-height: 90vh;}
+    .modal-header { padding: 20px 24px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; background: #faf8f5;}
+    .modal-body { padding: 24px; overflow-y: auto; flex: 1; }
+    .modal-footer { padding: 20px 24px; border-top: 1px solid #eee; background: #faf8f5; display: flex; gap: 12px; justify-content: flex-end;}
+    
+    /* Grid Detail Modal */
+    .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+    .detail-box { background: #fdfbf9; pading: 12px; border: 1px solid #eee; border-radius: 12px; padding: 16px; }
+    .detail-label { font-size: 11px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; margin-bottom: 4px; display: block;}
+    .detail-value { font-size: 14px; font-weight: 600; color: var(--text-main); }
+    
+    /* Tombol Dalam Modal */
+    .btn-aksi-modal { padding: 10px 20px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; transition: 0.2s; display: inline-flex; justify-content: center; align-items: center; flex: 1;}
+    .btn-lolos-modal { background: #10B981; color: white; }
+    .btn-lolos-modal:hover { background: #059669; }
+    .btn-gagal-modal { background: #EF4444; color: white; }
+    .btn-gagal-modal:hover { background: #DC2626; }
+    .btn-tutup { background: #e5e7eb; color: #374151; }
+    .btn-tutup:hover { background: #d1d5db; }
+
+    /* FILE VIEWER MODAL (Iframe) */
+    #fileViewerOverlay { z-index: 100; display: none; }
+    .viewer-container { width: 100%; max-width: 900px; height: 85vh; background: #000; border-radius: 12px; overflow: hidden; position: relative; border: 1px solid #333; }
+    .viewer-header { background: #1a1a1a; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; color: white; border-bottom: 1px solid #333;}
+    .invisible-shield { position: absolute; top: 0; left: 0; right: 0; height: 60px; background: transparent; z-index: 50; }
+    
+    .loading-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.8); z-index: 200; justify-content: center; align-items: center; flex-direction: column; }
     .spinner { border: 4px solid #f3f3f3; border-top: 4px solid var(--color-primary); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
   </style>
 </head>
 <body>
 
+  <!-- Loading Global -->
   <div class="loading-overlay" id="loadingOverlay">
     <div class="spinner mb-4"></div>
     <p class="font-semibold" style="color: var(--color-primary)">Memproses data...</p>
   </div>
 
+  <!-- MODAL PENAMPIL DOKUMEN (Google Drive Iframe) -->
+  <div class="modal-overlay" id="fileViewerOverlay">
+      <div class="viewer-container">
+          <div class="viewer-header">
+              <h3 class="font-bold text-sm"><i class="fas fa-file-alt text-blue-400 mr-2"></i> Pratinjau Berkas Bukti</h3>
+              <button onclick="closeFileViewer()" class="text-red-400 hover:text-red-500 bg-red-400/10 px-3 py-1 rounded"><i class="fas fa-times"></i> Tutup</button>
+          </div>
+          <div class="relative w-full h-[calc(100%-48px)] bg-white flex justify-center items-center">
+              <span id="viewerLoadingText" class="absolute text-sm font-bold text-slate-400 z-0">Memuat Dokumen...</span>
+              <iframe id="documentIframe" src="" class="w-full h-full border-0 relative z-10" allow="autoplay"></iframe>
+              <div class="invisible-shield" oncontextmenu="return false;" onclick="event.stopPropagation();"></div>
+          </div>
+      </div>
+  </div>
+
+  <!-- MODAL DETAIL PESERTA -->
+  <div class="modal-overlay" id="detailModal">
+      <div class="modal-container">
+          <div class="modal-header">
+              <div>
+                  <h2 class="text-lg font-bold text-gray-800">Detail Pendaftar</h2>
+                  <p class="text-xs text-gray-500 mt-1" id="mNik">NIK: -</p>
+              </div>
+              <button onclick="closeDetailModal()" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times text-xl"></i></button>
+          </div>
+          <div class="modal-body">
+              <!-- Grid Info Utama -->
+              <div class="detail-grid">
+                  <div class="detail-box">
+                      <span class="detail-label">Nama Lengkap</span>
+                      <span class="detail-value" id="mNama">-</span>
+                  </div>
+                  <div class="detail-box">
+                      <span class="detail-label">Asal Instansi</span>
+                      <span class="detail-value" id="mSekolah">-</span>
+                  </div>
+                  <div class="detail-box">
+                      <span class="detail-label">Nomor WA</span>
+                      <a href="#" id="mWaLink" target="_blank" class="detail-value text-blue-600 hover:underline">-</a>
+                  </div>
+                  <div class="detail-box">
+                      <span class="detail-label">Jenis Kelamin</span>
+                      <span class="detail-value" id="mJK">-</span>
+                  </div>
+                  <div class="detail-box col-span-2">
+                      <span class="detail-label">Tempat, Tanggal Lahir</span>
+                      <span class="detail-value" id="mTTL">-</span>
+                  </div>
+                  <div class="detail-box">
+                      <span class="detail-label">Usia</span>
+                      <span class="detail-value" id="mUsia">-</span>
+                  </div>
+                  <div class="detail-box">
+                      <span class="detail-label">Tinggi / Berat Badan</span>
+                      <span class="detail-value" id="mFisik">-</span>
+                  </div>
+              </div>
+
+              <!-- Berkas & Status Box -->
+              <div class="bg-blue-50 border border-blue-100 rounded-xl p-4 flex justify-between items-center mb-4">
+                  <div>
+                      <span class="detail-label text-blue-700">Berkas Bukti</span>
+                      <p class="text-xs text-blue-600 mt-1">Kartu Pelajar / Identitas Pendaftar</p>
+                  </div>
+                  <button id="btnLihatBerkas" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-xs font-bold shadow transition flex items-center gap-2">
+                      <i class="fas fa-eye"></i> Buka Berkas
+                  </button>
+              </div>
+
+              <div class="bg-gray-50 border border-gray-200 rounded-xl p-4 flex justify-between items-center">
+                  <div>
+                      <span class="detail-label">Status Saat Ini</span>
+                      <div id="mStatusBadge" class="mt-1"></div>
+                  </div>
+                  <div id="mAlasanBox" style="display:none;" class="text-right">
+                      <span class="detail-label text-red-500">Alasan Penolakan</span>
+                      <p id="mAlasanText" class="text-xs font-semibold text-red-600 max-w-[200px]"></p>
+                  </div>
+              </div>
+          </div>
+          <div class="modal-footer">
+              <button onclick="closeDetailModal()" class="btn-aksi-modal btn-tutup flex-none w-auto px-6">Tutup</button>
+              <button id="btnLoloskan" class="btn-aksi-modal btn-lolos-modal"><i class="fas fa-check mr-2"></i> Loloskan</button>
+              <button id="btnGagalkan" class="btn-aksi-modal btn-gagal-modal"><i class="fas fa-times mr-2"></i> Tolak (Gagal)</button>
+          </div>
+      </div>
+  </div>
+
+  <!-- Layar Login Admin -->
   <div id="adminLoginScreen">
     <div class="auth-container text-center">
       <img src="https://upload.wikimedia.org/wikipedia/commons/3/36/Logo_DPPI.png" alt="Logo" class="mx-auto w-20 h-20 mb-4 object-contain">
@@ -76,6 +192,7 @@
     </div>
   </div>
 
+  <!-- Dashboard Tabel -->
   <div id="adminDashboard">
     <div class="header-bar">
       <div>
@@ -93,14 +210,8 @@
             <th>NIK</th>
             <th>Nama Lengkap</th>
             <th>Asal Instansi</th>
-            <th>No WA</th>
-            <th>JK</th>
-            <th>TTL</th>
-            <th>Usia</th>
-            <th>TB / BB</th>
-            <th>Bukti</th>
             <th>Status Saat Ini</th>
-            <th>Aksi (Ubah Status)</th>
+            <th class="text-center">Aksi</th>
           </tr>
         </thead>
         <tbody id="tableBody">
@@ -114,6 +225,8 @@
     // PASTIKAN URL INI ADALAH URL DEPLOYMENT BARU ANDA JIKA MENGALAMI PERUBAHAN
     const gasBaseUrl = 'https://script.google.com/macros/s/AKfycbw2QIIbxKmfcmFBEGMeKw95g9KheQNQ4Q5pE-3cRrP6itjWxBcL4fW88TKwf1MHV3c/exec';
     
+    let allData = []; // Variabel global untuk menampung seluruh data array
+
     document.addEventListener('DOMContentLoaded', () => {
       if (sessionStorage.getItem('adminAuth') === 'true') {
         showDashboard();
@@ -154,7 +267,6 @@
       document.getElementById('loadingOverlay').style.display = show ? 'flex' : 'none';
     }
 
-    // Fungsi Fetch dengan Robust Error Handling
     async function fetchDataPeserta() {
       showLoading(true);
       const payload = {
@@ -169,26 +281,18 @@
             headers: { 'Content-Type': 'text/plain;charset=utf-8' },
             body: JSON.stringify(payload) 
         });
-        
         const textResponse = await response.text();
-        
-        let result;
-        try {
-            result = JSON.parse(textResponse);
-        } catch (jsonError) {
-            console.error("Respons dari server bukan JSON:", textResponse);
-            throw new Error("Server Google merespons dengan Error HTML. Cek Console Browser (F12).");
-        }
+        const result = JSON.parse(textResponse);
 
         if (result.success) {
-          renderTable(result.data);
+          allData = result.data; // Simpan ke global variable
+          renderTable(allData);
         } else {
           alert("Akses ditolak: " + result.message);
           logoutAdmin();
         }
       } catch (error) {
-        console.error("Fetch API Error:", error);
-        alert("Gagal memuat data: " + error.message);
+        alert("Gagal memuat data. Cek koneksi internet.");
       }
       showLoading(false);
     }
@@ -198,7 +302,7 @@
       tbody.innerHTML = '';
 
       if (data.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="12" class="text-center py-8">Belum ada data pendaftar.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" class="text-center py-8">Belum ada data pendaftar.</td></tr>`;
         return;
       }
 
@@ -218,76 +322,149 @@
           <td class="font-medium">${peserta.nik || '-'}</td>
           <td class="font-semibold">${peserta.nama || '-'}</td>
           <td>${peserta.asalSekolah || '-'}</td>
-          <td><a href="https://wa.me/${peserta.telepon ? String(peserta.telepon).replace(/^0/, '62') : ''}" target="_blank" class="text-blue-600 hover:underline">${peserta.telepon || '-'}</a></td>
-          <td>${peserta.jenisKelamin || '-'}</td>
-          <td>${peserta.tempatLahir || '-'}</td>
-          <td>${peserta.usia ? peserta.usia + ' thn' : '-'}</td>
-          <td style="white-space: nowrap;">${peserta.tinggi ? peserta.tinggi + ' cm' : '-'} / ${peserta.berat ? peserta.berat + ' kg' : '-'}</td>
-          <td><a href="${peserta.fileBukti}" target="_blank" class="text-blue-600 hover:underline font-medium">Lihat File</a></td>
-          <td><span id="badge-${peserta.nik}" class="status-badge ${badgeClass}">${statusText}</span></td>
-          <td style="white-space: nowrap;">
-            <button class="btn-action btn-lolos" onclick="updateStatus('${peserta.nik}', 'Lolos')">Lolos</button>
-            <button class="btn-action btn-gagal" onclick="updateStatus('${peserta.nik}', 'Tidak Lolos')">Tidak Lolos</button>
+          <td><span id="badge-main-${peserta.nik}" class="status-badge ${badgeClass}">${statusText}</span></td>
+          <td class="text-center">
+            <button class="btn-detail" onclick="openDetailModal('${peserta.nik}')">
+                <i class="fas fa-list-alt"></i> Lihat Detail
+            </button>
           </td>
         `;
         tbody.appendChild(tr);
       });
     }
 
-    function updateStatus(nik, statusBaru) {
+    // FUNGSI MODAL DETAIL
+    function openDetailModal(nik) {
+        const p = allData.find(x => String(x.nik) === String(nik));
+        if (!p) return alert("Data tidak ditemukan");
+
+        document.getElementById('mNik').textContent = 'NIK: ' + p.nik;
+        document.getElementById('mNama').textContent = p.nama || '-';
+        document.getElementById('mSekolah').textContent = p.asalSekolah || '-';
+        document.getElementById('mJK').textContent = p.jenisKelamin || '-';
+        document.getElementById('mTTL').textContent = p.tempatLahir || '-';
+        document.getElementById('mUsia').textContent = p.usia ? p.usia + ' Tahun' : '-';
+        document.getElementById('mFisik').textContent = (p.tinggi ? p.tinggi + ' cm' : '-') + ' / ' + (p.berat ? p.berat + ' kg' : '-');
+        
+        // Setup Link WA
+        if(p.telepon) {
+            const num = String(p.telepon).replace(/^0/, '62');
+            document.getElementById('mWaLink').textContent = p.telepon;
+            document.getElementById('mWaLink').href = 'https://wa.me/' + num;
+        }
+
+        // Setup File Viewer Button
+        const btnBerkas = document.getElementById('btnLihatBerkas');
+        if (p.fileBukti) {
+            btnBerkas.onclick = () => openFileViewer(p.fileBukti);
+            btnBerkas.disabled = false;
+            btnBerkas.style.opacity = '1';
+        } else {
+            btnBerkas.onclick = null;
+            btnBerkas.disabled = true;
+            btnBerkas.style.opacity = '0.5';
+        }
+
+        // Setup Status Saat Ini di Dalam Modal
+        renderStatusBadgeModal(p.status, p.alasan);
+
+        // Bind tombol aksi Lolos & Gagal
+        document.getElementById('btnLoloskan').onclick = () => { processUpdateStatus(nik, 'Lolos'); closeDetailModal(); };
+        document.getElementById('btnGagalkan').onclick = () => { processUpdateStatus(nik, 'Tidak Lolos'); closeDetailModal(); };
+
+        document.getElementById('detailModal').style.display = 'flex';
+    }
+
+    function closeDetailModal() {
+        document.getElementById('detailModal').style.display = 'none';
+    }
+
+    function renderStatusBadgeModal(statusText, alasan) {
+        statusText = statusText ? statusText.trim() : 'Menunggu Verifikasi';
+        let bClass = 'badge-pending';
+        let isGagal = false;
+
+        if (statusText.toLowerCase() === 'lolos' || statusText.toLowerCase() === 'terverifikasi') {
+            bClass = 'badge-lolos';
+        } else if (statusText.toLowerCase() === 'tidak lolos' || statusText.toLowerCase() === 'gagal') {
+            bClass = 'badge-gagal';
+            isGagal = true;
+        }
+
+        document.getElementById('mStatusBadge').innerHTML = `<span class="status-badge ${bClass}">${statusText}</span>`;
+        
+        const divAlasan = document.getElementById('mAlasanBox');
+        if (isGagal) {
+            divAlasan.style.display = 'block';
+            document.getElementById('mAlasanText').textContent = alasan || 'Tidak memenuhi kualifikasi';
+        } else {
+            divAlasan.style.display = 'none';
+        }
+    }
+
+    // FUNGSI FILE VIEWER (Iframe Tanpa Berpindah Tab)
+    function openFileViewer(driveUrl) {
+        // Konversi Link Drive ke versi Preview
+        let embedUrl = driveUrl;
+        const driveRegex = /\/file\/d\/([a-zA-Z0-9_-]+)/;
+        const match = driveUrl.match(driveRegex);
+        
+        if (match && match[1]) {
+            // Tambahkan rm=minimal agar header drive bersih
+            embedUrl = `https://drive.google.com/file/d/${match[1]}/preview?rm=minimal`;
+        } else if (driveUrl.includes('id=')) {
+            const idMatch = driveUrl.match(/id=([a-zA-Z0-9_-]+)/);
+            if(idMatch && idMatch[1]) embedUrl = `https://drive.google.com/file/d/${idMatch[1]}/preview?rm=minimal`;
+        }
+        
+        document.getElementById('documentIframe').src = embedUrl;
+        document.getElementById('fileViewerOverlay').style.display = 'flex';
+    }
+
+    function closeFileViewer() {
+        document.getElementById('fileViewerOverlay').style.display = 'none';
+        document.getElementById('documentIframe').src = ""; // Stop loading
+    }
+
+    // PROSES MENGUBAH STATUS (Optimistic UI)
+    function processUpdateStatus(nik, statusBaru) {
       let alasan = "";
-      
-      // Minta alasan jika Tidak Lolos
       if (statusBaru === 'Tidak Lolos') {
           alasan = prompt(`Masukkan ALASAN kenapa peserta (NIK: ${nik}) Tidak Lolos:\n(Boleh dikosongkan)`);
-          if (alasan === null) return; // Batal jika menekan tombol Cancel
+          if (alasan === null) return; 
       } else {
-          // Jika Lolos, hapus alasan
           alasan = "-"; 
       }
 
-      // Optimistic UI Update 
-      const badge = document.getElementById(`badge-${nik}`);
-      if (!badge) return;
+      // Update Data Lokal (Array)
+      const pIndex = allData.findIndex(x => String(x.nik) === String(nik));
+      if(pIndex !== -1) {
+          allData[pIndex].status = statusBaru;
+          allData[pIndex].alasan = alasan;
+      }
 
-      const oldStatus = badge.textContent;
-      const oldClass = badge.className;
+      // Optimistic UI Update di Tabel
+      const badgeTabel = document.getElementById(`badge-main-${nik}`);
+      if (badgeTabel) {
+          badgeTabel.textContent = statusBaru;
+          badgeTabel.className = `status-badge ${statusBaru.toLowerCase() === 'lolos' ? 'badge-lolos' : 'badge-gagal'}`;
+      }
 
-      badge.textContent = statusBaru;
-      badge.className = `status-badge ${statusBaru.toLowerCase() === 'lolos' ? 'badge-lolos' : 'badge-gagal'}`;
-
+      // Kirim Background Process
       const payload = {
         action: 'updateStatus',
         username: sessionStorage.getItem('adminUser'),
         password: sessionStorage.getItem('adminPass'),
         nik: nik,
         status: statusBaru,
-        alasan: alasan // Kirim alasan ke Google Script
+        alasan: alasan 
       };
 
       fetch(gasBaseUrl, { 
           method: 'POST',
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
           body: JSON.stringify(payload) 
-      })
-      .then(response => response.text())
-      .then(textResponse => {
-          try {
-              const result = JSON.parse(textResponse);
-              if (!result.success) {
-                  throw new Error(result.message);
-              }
-          } catch (e) {
-              badge.textContent = oldStatus;
-              badge.className = oldClass;
-              console.error("Gagal simpan ke database:", e.message);
-          }
-      })
-      .catch(error => {
-          badge.textContent = oldStatus;
-          badge.className = oldClass;
-          console.error("Background Fetch Error:", error);
-      });
+      }).then(res => res.text()).catch(e => console.error(e));
     }
   </script>
 </body>
