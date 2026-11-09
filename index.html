@@ -221,7 +221,7 @@
           <td>${peserta.usia ? peserta.usia + ' thn' : '-'}</td>
           <td style="white-space: nowrap;">${peserta.tinggi ? peserta.tinggi + ' cm' : '-'} / ${peserta.berat ? peserta.berat + ' kg' : '-'}</td>
           <td><a href="${peserta.fileBukti}" target="_blank" class="text-blue-600 hover:underline font-medium">Lihat File</a></td>
-          <td><span class="status-badge ${badgeClass}">${statusText}</span></td>
+          <td><span id="badge-${peserta.nik}" class="status-badge ${badgeClass}">${statusText}</span></td>
           <td style="white-space: nowrap;">
             <button class="btn-action btn-lolos" onclick="updateStatus('${peserta.nik}', 'Lolos')">Lolos</button>
             <button class="btn-action btn-gagal" onclick="updateStatus('${peserta.nik}', 'Tidak Lolos')">Tidak Lolos</button>
@@ -231,10 +231,20 @@
       });
     }
 
-    async function updateStatus(nik, statusBaru) {
-      if (!confirm(`Yakin ingin mengubah status peserta NIK ${nik} menjadi ${statusBaru}?`)) return;
+    function updateStatus(nik, statusBaru) {
+      // 1. Optimistic UI Update (Berubah instan di layar tanpa loading)
+      const badge = document.getElementById(`badge-${nik}`);
+      if (!badge) return;
 
-      showLoading(true);
+      // Simpan state lama untuk rollback jika internet putus/error
+      const oldStatus = badge.textContent;
+      const oldClass = badge.className;
+
+      // Ubah UI seketika
+      badge.textContent = statusBaru;
+      badge.className = `status-badge ${statusBaru.toLowerCase() === 'lolos' ? 'badge-lolos' : 'badge-gagal'}`;
+
+      // 2. Background Process (Menulis ke Google Sheets diam-diam)
       const payload = {
         action: 'updateStatus',
         username: sessionStorage.getItem('adminUser'),
@@ -243,34 +253,32 @@
         status: statusBaru
       };
 
-      try {
-        const response = await fetch(gasBaseUrl, { 
-            method: 'POST',
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify(payload) 
-        });
-        
-        const textResponse = await response.text();
-        
-        let result;
-        try {
-            result = JSON.parse(textResponse);
-        } catch (jsonError) {
-            console.error("Respons dari server bukan JSON:", textResponse);
-            throw new Error("Server Google merespons dengan Error HTML. Cek Console Browser (F12).");
-        }
-        
-        if (result.success) {
-          alert("Status berhasil diubah!");
-          fetchDataPeserta(); 
-        } else {
-          alert("Gagal merubah status: " + result.message);
-        }
-      } catch (error) {
-        console.error("Fetch API Error:", error);
-        alert("Gagal memproses ke server: " + error.message);
-      }
-      showLoading(false);
+      fetch(gasBaseUrl, { 
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify(payload) 
+      })
+      .then(response => response.text())
+      .then(textResponse => {
+          try {
+              const result = JSON.parse(textResponse);
+              if (!result.success) {
+                  throw new Error(result.message);
+              }
+              // Jika sukses, biarkan saja (karena UI sudah berubah duluan)
+          } catch (e) {
+              // Rollback UI jika gagal di server
+              badge.textContent = oldStatus;
+              badge.className = oldClass;
+              console.error("Gagal simpan ke database:", e.message);
+          }
+      })
+      .catch(error => {
+          // Rollback UI jika error jaringan/koneksi
+          badge.textContent = oldStatus;
+          badge.className = oldClass;
+          console.error("Background Fetch Error:", error);
+      });
     }
   </script>
 </body>
