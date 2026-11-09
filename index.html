@@ -56,6 +56,12 @@
 
     .logout-btn { color: var(--color-primary); font-weight: 600; cursor: pointer; text-decoration: underline; font-size: 14px; }
     
+    /* Filter & Stat Cards */
+    .stat-card { border: 2px solid transparent; transition: all 0.2s; }
+    .stat-card.active { border-color: var(--color-primary); background-color: #fff9f6; box-shadow: 0 4px 12px rgba(176, 92, 54, 0.15); }
+    .filter-input { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 8px 12px; font-size: 13px; width: 100%; outline: none; transition: 0.2s; }
+    .filter-input:focus { border-color: var(--color-primary); }
+
     /* MODAL POP-UP STYLES */
     .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 50; justify-content: center; align-items: center; padding: 20px;}
     .modal-container { background: var(--bg-card); width: 100%; max-width: 600px; border-radius: 20px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); border: 1px solid var(--border-color); overflow: hidden; display: flex; flex-direction: column; max-height: 90vh;}
@@ -105,7 +111,7 @@
               <button onclick="closeFileViewer()" class="text-red-400 hover:text-red-500 bg-red-400/10 px-3 py-1 rounded"><i class="fas fa-times"></i> Tutup</button>
           </div>
           <div class="relative w-full h-[calc(100%-48px)] bg-white flex justify-center items-center">
-              <span id="viewerLoadingText" class="absolute text-sm font-bold text-slate-400 z-0">Memuat Dokumen...</span>
+              <span class="absolute text-sm font-bold text-slate-400 z-0">Memuat Dokumen...</span>
               <iframe id="documentIframe" src="" class="w-full h-full border-0 relative z-10" allow="autoplay"></iframe>
               <div class="invisible-shield" oncontextmenu="return false;" onclick="event.stopPropagation();"></div>
           </div>
@@ -114,6 +120,7 @@
 
   <!-- MODAL DETAIL PESERTA -->
   <div class="modal-overlay" id="detailModal">
+      <!-- (Sama seperti sebelumnya) -->
       <div class="modal-container">
           <div class="modal-header">
               <div>
@@ -123,7 +130,6 @@
               <button onclick="closeDetailModal()" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times text-xl"></i></button>
           </div>
           <div class="modal-body">
-              <!-- Grid Info Utama -->
               <div class="detail-grid">
                   <div class="detail-box">
                       <span class="detail-label">Nama Lengkap</span>
@@ -155,7 +161,6 @@
                   </div>
               </div>
 
-              <!-- Berkas & Status Box -->
               <div class="bg-blue-50 border border-blue-100 rounded-xl p-4 flex justify-between items-center mb-4">
                   <div>
                       <span class="detail-label text-blue-700">Berkas Bukti</span>
@@ -209,6 +214,74 @@
       <a class="logout-btn" onclick="logoutAdmin()">Keluar (Logout)</a>
     </div>
 
+    <!-- STATISTIC CARDS (KLIK UNTUK FILTER) -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+      <div class="stat-card active p-4 rounded-xl bg-white cursor-pointer hover:shadow-md" onclick="setStatusFilter('all')" id="card-all">
+        <div class="text-gray-500 text-xs font-bold uppercase mb-1">Total Pendaftar</div>
+        <div class="text-2xl font-bold" id="statTotal">0</div>
+      </div>
+      <div class="stat-card p-4 rounded-xl bg-white cursor-pointer hover:shadow-md border-gray-200" onclick="setStatusFilter('lolos')" id="card-lolos">
+        <div class="text-emerald-500 text-xs font-bold uppercase mb-1">Lolos</div>
+        <div class="text-2xl font-bold text-emerald-600" id="statLolos">0</div>
+      </div>
+      <div class="stat-card p-4 rounded-xl bg-white cursor-pointer hover:shadow-md border-gray-200" onclick="setStatusFilter('gagal')" id="card-gagal">
+        <div class="text-red-500 text-xs font-bold uppercase mb-1">Tidak Lolos</div>
+        <div class="text-2xl font-bold text-red-600" id="statGagal">0</div>
+      </div>
+      <div class="stat-card p-4 rounded-xl bg-white cursor-pointer hover:shadow-md border-gray-200" onclick="setStatusFilter('pending')" id="card-pending">
+        <div class="text-amber-500 text-xs font-bold uppercase mb-1">Menunggu</div>
+        <div class="text-2xl font-bold text-amber-600" id="statPending">0</div>
+      </div>
+    </div>
+
+    <!-- FILTER SECTION -->
+    <div class="bg-white p-5 rounded-xl border border-gray-200 mb-6 shadow-sm">
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+            <!-- Pencarian Teks -->
+            <div class="md:col-span-4">
+                <label class="text-xs font-semibold text-gray-500 uppercase mb-1 block">Pencarian</label>
+                <div class="relative">
+                    <i class="fas fa-search absolute left-3 top-2.5 text-gray-400 text-sm"></i>
+                    <input type="text" id="filterSearch" class="filter-input pl-9" placeholder="Nama, NIK, atau Instansi..." onkeyup="applyFilters()">
+                </div>
+            </div>
+            <!-- Jenis Kelamin -->
+            <div class="md:col-span-2">
+                <label class="text-xs font-semibold text-gray-500 uppercase mb-1 block">Jenis Kelamin</label>
+                <select id="filterGender" class="filter-input" onchange="applyFilters()">
+                    <option value="all">Semua</option>
+                    <option value="Laki-laki">Laki-laki</option>
+                    <option value="Perempuan">Perempuan</option>
+                </select>
+            </div>
+            <!-- Tinggi Badan (Min - Max) -->
+            <div class="md:col-span-2">
+                <label class="text-xs font-semibold text-gray-500 uppercase mb-1 block">Tinggi (cm)</label>
+                <div class="flex gap-2 items-center">
+                    <input type="number" id="tbMin" class="filter-input text-center px-1" placeholder="Min" onkeyup="applyFilters()" onchange="applyFilters()">
+                    <span class="text-gray-400">-</span>
+                    <input type="number" id="tbMax" class="filter-input text-center px-1" placeholder="Max" onkeyup="applyFilters()" onchange="applyFilters()">
+                </div>
+            </div>
+            <!-- Berat Badan (Min - Max) -->
+            <div class="md:col-span-2">
+                <label class="text-xs font-semibold text-gray-500 uppercase mb-1 block">Berat (kg)</label>
+                <div class="flex gap-2 items-center">
+                    <input type="number" id="bbMin" class="filter-input text-center px-1" placeholder="Min" onkeyup="applyFilters()" onchange="applyFilters()">
+                    <span class="text-gray-400">-</span>
+                    <input type="number" id="bbMax" class="filter-input text-center px-1" placeholder="Max" onkeyup="applyFilters()" onchange="applyFilters()">
+                </div>
+            </div>
+            <!-- Tombol Reset -->
+            <div class="md:col-span-2">
+                <button onclick="resetFilters()" class="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 px-4 rounded-lg text-sm font-semibold transition border border-gray-200">
+                    <i class="fas fa-undo mr-1 text-xs"></i> Reset Filter
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TABEL DATA -->
     <div class="table-container">
       <table>
         <thead>
@@ -217,10 +290,11 @@
             <th>NIK</th>
             <th>Nama Lengkap</th>
             <th>Asal Instansi</th>
+            <th>J.Kelamin</th>
             <th>Usia</th>
             <th>TB/BB</th>
             <th>Berkas</th>
-            <th>Status Saat Ini</th>
+            <th>Status</th>
             <th class="text-center">Aksi</th>
           </tr>
         </thead>
@@ -232,10 +306,10 @@
   </div>
 
   <script>
-    // PASTIKAN URL INI ADALAH URL DEPLOYMENT BARU ANDA JIKA MENGALAMI PERUBAHAN
     const gasBaseUrl = 'https://script.google.com/macros/s/AKfycbw2QIIbxKmfcmFBEGMeKw95g9KheQNQ4Q5pE-3cRrP6itjWxBcL4fW88TKwf1MHV3c/exec';
     
-    let allData = []; // Variabel global untuk menampung seluruh data array
+    let allData = []; 
+    let activeStatusFilter = 'all'; // Status filter aktif dari Card
 
     document.addEventListener('DOMContentLoaded', () => {
       if (sessionStorage.getItem('adminAuth') === 'true') {
@@ -260,8 +334,6 @@
 
     function logoutAdmin() {
       sessionStorage.removeItem('adminAuth');
-      sessionStorage.removeItem('adminUser');
-      sessionStorage.removeItem('adminPass');
       document.getElementById('adminDashboard').style.display = 'none';
       document.getElementById('adminLoginScreen').style.display = 'flex';
       document.getElementById('adminLoginForm').reset();
@@ -291,12 +363,12 @@
             headers: { 'Content-Type': 'text/plain;charset=utf-8' },
             body: JSON.stringify(payload) 
         });
-        const textResponse = await response.text();
-        const result = JSON.parse(textResponse);
+        const result = await response.json();
 
         if (result.success) {
-          allData = result.data; // Simpan ke global variable
-          renderTable(allData);
+          allData = result.data;
+          updateStatisticCards();
+          applyFilters(); // Merender tabel berdasarkan filter saat ini (default: semua)
         } else {
           alert("Akses ditolak: " + result.message);
           logoutAdmin();
@@ -307,12 +379,107 @@
       showLoading(false);
     }
 
+    // --- LOGIKA STATISTIK & FILTERING ---
+
+    function updateStatisticCards() {
+        const total = allData.length;
+        let lolos = 0;
+        let gagal = 0;
+        
+        allData.forEach(p => {
+            const s = p.status ? p.status.trim().toLowerCase() : '';
+            if (s === 'lolos' || s === 'terverifikasi') lolos++;
+            else if (s === 'tidak lolos' || s === 'gagal') gagal++;
+        });
+        
+        const pending = total - lolos - gagal;
+
+        document.getElementById('statTotal').innerText = total;
+        document.getElementById('statLolos').innerText = lolos;
+        document.getElementById('statGagal').innerText = gagal;
+        document.getElementById('statPending').innerText = pending;
+    }
+
+    function setStatusFilter(status) {
+        activeStatusFilter = status;
+        
+        // Ubah tampilan card aktif
+        ['all', 'lolos', 'gagal', 'pending'].forEach(id => {
+            document.getElementById(`card-${id}`).classList.remove('active', 'border-gray-200');
+            if(id === status) {
+                document.getElementById(`card-${id}`).classList.add('active');
+            } else {
+                document.getElementById(`card-${id}`).classList.add('border-gray-200');
+            }
+        });
+        
+        applyFilters();
+    }
+
+    function resetFilters() {
+        document.getElementById('filterSearch').value = '';
+        document.getElementById('filterGender').value = 'all';
+        document.getElementById('tbMin').value = '';
+        document.getElementById('tbMax').value = '';
+        document.getElementById('bbMin').value = '';
+        document.getElementById('bbMax').value = '';
+        setStatusFilter('all'); // juga memanggil applyFilters()
+    }
+
+    function applyFilters() {
+        const search = document.getElementById('filterSearch').value.toLowerCase();
+        const gender = document.getElementById('filterGender').value.toLowerCase();
+        const tbMin = parseInt(document.getElementById('tbMin').value) || 0;
+        const tbMax = parseInt(document.getElementById('tbMax').value) || 9999;
+        const bbMin = parseInt(document.getElementById('bbMin').value) || 0;
+        const bbMax = parseInt(document.getElementById('bbMax').value) || 9999;
+
+        const filteredData = allData.filter(p => {
+            // 1. Filter Status (Dari Kartu)
+            let s = p.status ? p.status.trim().toLowerCase() : 'menunggu verifikasi';
+            let statusMatch = false;
+            
+            if (activeStatusFilter === 'all') statusMatch = true;
+            else if (activeStatusFilter === 'lolos' && (s === 'lolos' || s === 'terverifikasi')) statusMatch = true;
+            else if (activeStatusFilter === 'gagal' && (s === 'tidak lolos' || s === 'gagal')) statusMatch = true;
+            else if (activeStatusFilter === 'pending' && s !== 'lolos' && s !== 'terverifikasi' && s !== 'tidak lolos' && s !== 'gagal') statusMatch = true;
+            
+            if (!statusMatch) return false;
+
+            // 2. Pencarian Text
+            const textGabung = `${p.nik} ${p.nama} ${p.asalSekolah}`.toLowerCase();
+            if (search && !textGabung.includes(search)) return false;
+
+            // 3. Filter Jenis Kelamin
+            if (gender !== 'all') {
+                const jk = (p.jenisKelamin || '').toLowerCase();
+                if (jk !== gender) return false;
+            }
+
+            // 4. Filter TB & BB
+            const tb = parseInt(p.tinggi) || 0;
+            const bb = parseInt(p.berat) || 0;
+            
+            // Logika: Jika input Min/Max diisi, periksa batasnya. Jika data TB/BB tidak ada (0), anggap tidak lolos filter jika filter aktif.
+            if (tbMin > 0 && tb < tbMin) return false;
+            if (tbMax < 9999 && tb > tbMax) return false;
+            if (bbMin > 0 && bb < bbMin) return false;
+            if (bbMax < 9999 && bb > bbMax) return false;
+
+            return true;
+        });
+
+        renderTable(filteredData);
+    }
+
+    // --- RENDER TABEL ---
+
     function renderTable(data) {
       const tbody = document.getElementById('tableBody');
       tbody.innerHTML = '';
 
       if (data.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="9" class="text-center py-8">Belum ada data pendaftar.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="10" class="text-center py-8 text-gray-500">Tidak ada data pendaftar yang sesuai.</td></tr>`;
         return;
       }
 
@@ -327,8 +494,12 @@
         }
 
         const btnBerkasHtml = peserta.fileBukti 
-            ? `<button onclick="openFileViewer('${peserta.fileBukti}')" class="text-blue-600 hover:text-blue-800 underline text-xs font-semibold whitespace-nowrap"><i class="fas fa-eye"></i> Lihat Berkas</button>`
-            : `<span class="text-gray-400 text-xs italic">Tidak ada</span>`;
+            ? `<button onclick="openFileViewer('${peserta.fileBukti}')" class="text-blue-600 hover:text-blue-800 underline text-xs font-semibold whitespace-nowrap"><i class="fas fa-eye"></i> Berkas</button>`
+            : `<span class="text-gray-400 text-xs italic">-</span>`;
+            
+        // Singkat L/P
+        let jkSingkat = (peserta.jenisKelamin || '').toLowerCase().includes('perempuan') ? 'P' : 'L';
+        if(!peserta.jenisKelamin) jkSingkat = '-';
 
         const tr = document.createElement('tr');
         tr.innerHTML = `
@@ -336,8 +507,9 @@
           <td class="font-medium">${peserta.nik || '-'}</td>
           <td class="font-semibold">${peserta.nama || '-'}</td>
           <td>${peserta.asalSekolah || '-'}</td>
+          <td class="text-center">${jkSingkat}</td>
           <td>${peserta.usia ? peserta.usia + ' Thn' : '-'}</td>
-          <td>${peserta.tinggi ? peserta.tinggi + ' cm' : '-'} / ${peserta.berat ? peserta.berat + ' kg' : '-'}</td>
+          <td class="whitespace-nowrap">${peserta.tinggi ? peserta.tinggi + 'cm' : '-'} / ${peserta.berat ? peserta.berat + 'kg' : '-'}</td>
           <td>${btnBerkasHtml}</td>
           <td><span id="badge-main-${peserta.nik}" class="status-badge ${badgeClass}">${statusText}</span></td>
           <td>
@@ -349,7 +521,7 @@
                     <i class="fas fa-times"></i>
                 </button>
                 <button class="btn-detail" onclick="openDetailModal('${peserta.nik}')" title="Lihat Detail">
-                    <i class="fas fa-list-alt"></i> Detail
+                    <i class="fas fa-list-alt"></i>
                 </button>
             </div>
           </td>
@@ -358,7 +530,8 @@
       });
     }
 
-    // FUNGSI MODAL DETAIL
+    // --- MODAL DETAIL & VIEWER ---
+
     function openDetailModal(nik) {
         const p = allData.find(x => String(x.nik) === String(nik));
         if (!p) return alert("Data tidak ditemukan");
@@ -371,14 +544,12 @@
         document.getElementById('mUsia').textContent = p.usia ? p.usia + ' Tahun' : '-';
         document.getElementById('mFisik').textContent = (p.tinggi ? p.tinggi + ' cm' : '-') + ' / ' + (p.berat ? p.berat + ' kg' : '-');
         
-        // Setup Link WA
         if(p.telepon) {
             const num = String(p.telepon).replace(/^0/, '62');
             document.getElementById('mWaLink').textContent = p.telepon;
             document.getElementById('mWaLink').href = 'https://wa.me/' + num;
         }
 
-        // Setup File Viewer Button
         const btnBerkas = document.getElementById('btnLihatBerkas');
         if (p.fileBukti) {
             btnBerkas.onclick = () => openFileViewer(p.fileBukti);
@@ -390,57 +561,37 @@
             btnBerkas.style.opacity = '0.5';
         }
 
-        // Setup Status Saat Ini di Dalam Modal
         renderStatusBadgeModal(p.status, p.alasan);
 
-        // Bind tombol aksi Lolos & Gagal
         document.getElementById('btnLoloskan').onclick = () => { processUpdateStatus(nik, 'Lolos'); closeDetailModal(); };
         document.getElementById('btnGagalkan').onclick = () => { processUpdateStatus(nik, 'Tidak Lolos'); closeDetailModal(); };
 
         document.getElementById('detailModal').style.display = 'flex';
     }
 
-    function closeDetailModal() {
-        document.getElementById('detailModal').style.display = 'none';
-    }
+    function closeDetailModal() { document.getElementById('detailModal').style.display = 'none'; }
 
     function renderStatusBadgeModal(statusText, alasan) {
         statusText = statusText ? statusText.trim() : 'Menunggu Verifikasi';
         let bClass = 'badge-pending';
         let isGagal = false;
 
-        if (statusText.toLowerCase() === 'lolos' || statusText.toLowerCase() === 'terverifikasi') {
-            bClass = 'badge-lolos';
-        } else if (statusText.toLowerCase() === 'tidak lolos' || statusText.toLowerCase() === 'gagal') {
-            bClass = 'badge-gagal';
-            isGagal = true;
-        }
+        if (statusText.toLowerCase() === 'lolos' || statusText.toLowerCase() === 'terverifikasi') { bClass = 'badge-lolos'; } 
+        else if (statusText.toLowerCase() === 'tidak lolos' || statusText.toLowerCase() === 'gagal') { bClass = 'badge-gagal'; isGagal = true; }
 
         document.getElementById('mStatusBadge').innerHTML = `<span class="status-badge ${bClass}">${statusText}</span>`;
-        
         const divAlasan = document.getElementById('mAlasanBox');
-        if (isGagal) {
-            divAlasan.style.display = 'block';
-            document.getElementById('mAlasanText').textContent = alasan || 'Tidak memenuhi kualifikasi';
-        } else {
-            divAlasan.style.display = 'none';
-        }
+        if (isGagal) { divAlasan.style.display = 'block'; document.getElementById('mAlasanText').textContent = alasan || 'Tidak memenuhi kualifikasi'; } 
+        else { divAlasan.style.display = 'none'; }
     }
 
-    // FUNGSI FILE VIEWER (Iframe Tanpa Berpindah Tab)
     function openFileViewer(driveUrl) {
-        // Konversi Link Drive ke versi Preview
         let embedUrl = driveUrl;
         const driveRegex = /\/file\/d\/([a-zA-Z0-9_-]+)/;
         const match = driveUrl.match(driveRegex);
         
-        if (match && match[1]) {
-            // Tambahkan rm=minimal agar header drive bersih
-            embedUrl = `https://drive.google.com/file/d/${match[1]}/preview?rm=minimal`;
-        } else if (driveUrl.includes('id=')) {
-            const idMatch = driveUrl.match(/id=([a-zA-Z0-9_-]+)/);
-            if(idMatch && idMatch[1]) embedUrl = `https://drive.google.com/file/d/${idMatch[1]}/preview?rm=minimal`;
-        }
+        if (match && match[1]) { embedUrl = `https://drive.google.com/file/d/${match[1]}/preview?rm=minimal`; } 
+        else if (driveUrl.includes('id=')) { const idMatch = driveUrl.match(/id=([a-zA-Z0-9_-]+)/); if(idMatch && idMatch[1]) embedUrl = `https://drive.google.com/file/d/${idMatch[1]}/preview?rm=minimal`; }
         
         document.getElementById('documentIframe').src = embedUrl;
         document.getElementById('fileViewerOverlay').style.display = 'flex';
@@ -448,10 +599,11 @@
 
     function closeFileViewer() {
         document.getElementById('fileViewerOverlay').style.display = 'none';
-        document.getElementById('documentIframe').src = ""; // Stop loading
+        document.getElementById('documentIframe').src = "";
     }
 
-    // PROSES MENGUBAH STATUS (Optimistic UI)
+    // --- PROSES MENGUBAH STATUS ---
+
     function processUpdateStatus(nik, statusBaru) {
       let alasan = "";
       if (statusBaru === 'Tidak Lolos') {
@@ -468,12 +620,9 @@
           allData[pIndex].alasan = alasan;
       }
 
-      // Optimistic UI Update di Tabel
-      const badgeTabel = document.getElementById(`badge-main-${nik}`);
-      if (badgeTabel) {
-          badgeTabel.textContent = statusBaru;
-          badgeTabel.className = `status-badge ${statusBaru.toLowerCase() === 'lolos' ? 'badge-lolos' : 'badge-gagal'}`;
-      }
+      // Update statistik dan filter ulang agar UI segera sinkron
+      updateStatisticCards();
+      applyFilters();
 
       // Kirim Background Process
       const payload = {
