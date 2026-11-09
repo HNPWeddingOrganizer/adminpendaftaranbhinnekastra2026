@@ -212,7 +212,7 @@
           <td class="font-medium">${peserta.nik}</td>
           <td class="font-semibold">${peserta.nama}</td>
           <td>${peserta.asalSekolah}</td>
-          <td><a href="https://wa.me/${peserta.telepon ? peserta.telepon.replace(/^0/, '62') : ''}" target="_blank" class="text-blue-600 hover:underline">${peserta.telepon}</a></td>
+          <td><a href="https://wa.me/${peserta.telepon ? String(peserta.telepon).replace(/^0/, '62') : ''}" target="_blank" class="text-blue-600 hover:underline">${peserta.telepon}</a></td>
           <td><a href="${peserta.fileBukti}" target="_blank" class="text-blue-600 hover:underline">Lihat File</a></td>
           <td><span class="status-badge ${badgeClass}">${statusText}</span></td>
           <td>
