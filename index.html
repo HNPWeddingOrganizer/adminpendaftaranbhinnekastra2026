@@ -298,6 +298,7 @@
           <tr>
             <th>No</th>
             <th>Tgl Daftar</th>
+            <th>Tgl Verifikasi</th> <!-- Kolom Baru Ditambahkan di Sini -->
             <th>NIK</th>
             <th>Nama Lengkap</th>
             <th>Asal Instansi</th>
@@ -480,7 +481,7 @@
       tbody.innerHTML = '';
 
       if (data.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="11" class="text-center py-8 text-gray-500">Tidak ada data pendaftar yang sesuai.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="12" class="text-center py-8 text-gray-500">Tidak ada data pendaftar yang sesuai.</td></tr>`;
         return;
       }
 
@@ -501,13 +502,19 @@
         let jkSingkat = (peserta.jenisKelamin || '').toLowerCase().includes('perempuan') ? 'P' : 'L';
         if(!peserta.jenisKelamin) jkSingkat = '-';
 
-        // Format waktu untuk tabel agar tidak terlalu panjang (opsional)
-        let tglDaftar = peserta.timestamp ? String(peserta.timestamp).split(' ')[0] : '-';
+        // Format waktu agar sesuai dengan zona waktu lokal (Indonesia)
+        let tglDaftar = '-';
+        if (peserta.timestamp) {
+            const d = new Date(peserta.timestamp);
+            tglDaftar = d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }); 
+        }
+        let tglVerifikasi = peserta.waktuVerifikasi ? peserta.waktuVerifikasi : '-';
 
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td>${index + 1}</td>
           <td class="text-xs text-gray-500 whitespace-nowrap">${tglDaftar}</td>
+          <td class="text-xs text-emerald-600 font-medium whitespace-nowrap" id="waktu-verif-tabel-${peserta.nik}">${tglVerifikasi}</td>
           <td class="font-medium">${peserta.nik || '-'}</td>
           <td class="font-semibold">${peserta.nama || '-'}</td>
           <td>${peserta.asalSekolah || '-'}</td>
@@ -547,8 +554,16 @@
         document.getElementById('mUsia').textContent = p.usia ? p.usia + ' Tahun' : '-';
         document.getElementById('mFisik').textContent = (p.tinggi ? p.tinggi + ' cm' : '-') + ' / ' + (p.berat ? p.berat + ' kg' : '-');
         
-        // Data Waktu
-        document.getElementById('mTimestamp').textContent = p.timestamp || 'Tidak tersedia';
+        // Data Waktu (diformat ke lokal Indonesia beserta jamnya)
+        let detailWaktuDaftar = 'Tidak tersedia';
+        if (p.timestamp) {
+            const d = new Date(p.timestamp);
+            detailWaktuDaftar = d.toLocaleString('id-ID', { 
+                day: '2-digit', month: 'short', year: 'numeric', 
+                hour: '2-digit', minute: '2-digit' 
+            });
+        }
+        document.getElementById('mTimestamp').textContent = detailWaktuDaftar;
         document.getElementById('mWaktuVerifikasi').textContent = p.waktuVerifikasi || 'Belum diverifikasi';
         
         if(p.telepon) {
@@ -633,6 +648,12 @@
           allData[pIndex].waktuVerifikasi = now; // Tambahkan data waktu verifikasi lokal
       }
 
+      // Update waktu di tabel secara instan (Optimistic UI)
+      const tglVerifTabel = document.getElementById(`waktu-verif-tabel-${nik}`);
+      if (tglVerifTabel) {
+          tglVerifTabel.textContent = now;
+      }
+
       // Update statistik dan filter ulang agar UI segera sinkron
       updateStatisticCards();
       applyFilters();
@@ -645,7 +666,7 @@
         nik: nik,
         status: statusBaru,
         alasan: alasan,
-        waktuVerifikasi: now // Anda juga bisa mengirim ini ke backend jika diperlukan
+        waktuVerifikasi: now 
       };
 
       fetch(gasBaseUrl, { 
