@@ -122,14 +122,16 @@
   <div class="modal-overlay" id="detailModal">
       <div class="modal-container">
           <div class="modal-header">
-              <div>
-                  <h2 class="text-lg font-bold text-gray-800">Detail Pendaftar</h2>
-                  <p class="text-xs text-gray-500 mt-1" id="mNik">NIK: -</p>
+              <div class="flex items-center gap-4">
+                  <img id="mFotoProfil" src="https://placehold.co/100/eeeeee/999999?text=User" alt="Profil" class="w-14 h-14 rounded-full object-cover border border-gray-200 bg-white">
+                  <div>
+                      <h2 class="text-lg font-bold text-gray-800">Detail Pendaftar</h2>
+                      <p class="text-xs text-gray-500 mt-1" id="mNik">NIK: -</p>
+                  </div>
               </div>
               <button onclick="closeDetailModal()" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times text-xl"></i></button>
           </div>
           <div class="modal-body">
-              <!-- Grid Info Utama -->
               <div class="detail-grid">
                   <div class="detail-box">
                       <span class="detail-label">Nama Lengkap</span>
@@ -159,7 +161,6 @@
                       <span class="detail-label">Tinggi / Berat Badan</span>
                       <span class="detail-value" id="mFisik">-</span>
                   </div>
-                  <!-- Waktu Pendaftaran & Verifikasi -->
                   <div class="detail-box bg-orange-50 border-orange-100">
                       <span class="detail-label text-orange-700">Waktu Mendaftar</span>
                       <span class="detail-value text-orange-900" id="mTimestamp">-</span>
@@ -170,7 +171,6 @@
                   </div>
               </div>
 
-              <!-- Berkas & Status Box -->
               <div class="bg-blue-50 border border-blue-100 rounded-xl p-4 flex justify-between items-center mb-4">
                   <div>
                       <span class="detail-label text-blue-700">Berkas Bukti</span>
@@ -298,7 +298,7 @@
           <tr>
             <th>No</th>
             <th>Tgl Daftar</th>
-            <th>Tgl Verifikasi</th> <!-- Kolom Baru Ditambahkan di Sini -->
+            <th>Tgl Verifikasi</th> 
             <th>NIK</th>
             <th>Nama Lengkap</th>
             <th>Asal Instansi</th>
@@ -318,7 +318,7 @@
   </div>
 
   <script>
-    const gasBaseUrl = 'https://script.google.com/macros/s/AKfycbzocDiu9uptc8if_x4YcI9Jh9Jizz-BQkKOjz_jlMEYOZisCoJxhor250v7gEJ0gGet/exec';
+    const gasBaseUrl = 'https://script.google.com/macros/s/AKfycbyG1Rw1OZglHeiUqlKzJxrtqLhuz4IgR-CQOCIP0wYWKbJXQCXnfdGHw8wOma11PXo/exec';
     
     let allData = []; 
     let activeStatusFilter = 'all'; 
@@ -502,7 +502,6 @@
         let jkSingkat = (peserta.jenisKelamin || '').toLowerCase().includes('perempuan') ? 'P' : 'L';
         if(!peserta.jenisKelamin) jkSingkat = '-';
 
-        // Format waktu agar sesuai dengan zona waktu lokal (Indonesia)
         let tglDaftar = '-';
         if (peserta.timestamp) {
             const d = new Date(peserta.timestamp);
@@ -554,7 +553,18 @@
         document.getElementById('mUsia').textContent = p.usia ? p.usia + ' Tahun' : '-';
         document.getElementById('mFisik').textContent = (p.tinggi ? p.tinggi + ' cm' : '-') + ' / ' + (p.berat ? p.berat + ' kg' : '-');
         
-        // Data Waktu (diformat ke lokal Indonesia beserta jamnya)
+        const imgProfilModal = document.getElementById('mFotoProfil');
+        if (p.fotoProfil && p.fotoProfil !== "") {
+            const match = p.fotoProfil.match(/\/file\/d\/([a-zA-Z0-9_-]+)/) || p.fotoProfil.match(/id=([a-zA-Z0-9_-]+)/);
+            if (match && match[1]) {
+                imgProfilModal.src = `https://drive.google.com/thumbnail?id=${match[1]}&sz=w200-h200`;
+            } else {
+                imgProfilModal.src = p.fotoProfil;
+            }
+        } else {
+            imgProfilModal.src = `https://placehold.co/200/F9F1E2/A3496C?text=${p.nama ? p.nama.charAt(0) : 'U'}`;
+        }
+
         let detailWaktuDaftar = 'Tidak tersedia';
         if (p.timestamp) {
             const d = new Date(p.timestamp);
@@ -634,31 +644,26 @@
           alasan = "-"; 
       }
 
-      // Generate Waktu Saat Ini untuk Optimistic UI
       const now = new Date().toLocaleString('id-ID', { 
           day: '2-digit', month: 'short', year: 'numeric', 
           hour: '2-digit', minute: '2-digit' 
       });
 
-      // Update Data Lokal (Array)
       const pIndex = allData.findIndex(x => String(x.nik) === String(nik));
       if(pIndex !== -1) {
           allData[pIndex].status = statusBaru;
           allData[pIndex].alasan = alasan;
-          allData[pIndex].waktuVerifikasi = now; // Tambahkan data waktu verifikasi lokal
+          allData[pIndex].waktuVerifikasi = now; 
       }
 
-      // Update waktu di tabel secara instan (Optimistic UI)
       const tglVerifTabel = document.getElementById(`waktu-verif-tabel-${nik}`);
       if (tglVerifTabel) {
           tglVerifTabel.textContent = now;
       }
 
-      // Update statistik dan filter ulang agar UI segera sinkron
       updateStatisticCards();
       applyFilters();
 
-      // Kirim Background Process ke Apps Script
       const payload = {
         action: 'updateStatus',
         username: sessionStorage.getItem('adminUser'),
