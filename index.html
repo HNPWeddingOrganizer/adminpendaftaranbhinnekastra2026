@@ -31,7 +31,7 @@
     #adminDashboard { display: none; padding: 20px; max-width: 1400px; margin: 0 auto; }
     .header-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; background: var(--bg-card); padding: 20px 30px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid var(--border-color); }
     .table-container { background: var(--bg-card); border-radius: 16px; overflow-x: auto; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid var(--border-color); }
-    table { width: 100%; border-collapse: collapse; min-width: 1100px; }
+    table { width: 100%; border-collapse: collapse; min-width: 1200px; }
     th { background: var(--color-primary); color: white; padding: 16px; text-align: left; font-size: 13px; font-weight: 600; white-space: nowrap; }
     td { padding: 16px; border-bottom: 1px solid #eee; font-size: 13px; }
     tr:hover { background: #fdfbf9; }
@@ -93,6 +93,7 @@
             <th>Nama Lengkap</th>
             <th>Asal Instansi</th>
             <th>No WA</th>
+            <th>JK</th>
             <th>TTL</th>
             <th>Usia</th>
             <th>TB / BB</th>
@@ -110,7 +111,7 @@
 
   <script>
     // PASTIKAN URL INI ADALAH URL DEPLOYMENT BARU ANDA JIKA MENGALAMI PERUBAHAN
-    const gasBaseUrl = 'https://script.google.com/macros/s/AKfycbw6wfbQ3jlW3TQex4n_y_YwGp93mFBwt-0W7Yr3ZEfQA1A8tBeZZGzGn5746qhUMkXM/exec';
+    const gasBaseUrl = 'https://script.google.com/macros/s/AKfycbw2QIIbxKmfcmFBEGMeKw95g9KheQNQ4Q5pE-3cRrP6itjWxBcL4fW88TKwf1MHV3c/exec';
     
     document.addEventListener('DOMContentLoaded', () => {
       if (sessionStorage.getItem('adminAuth') === 'true') {
@@ -196,7 +197,7 @@
       tbody.innerHTML = '';
 
       if (data.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="11" class="text-center py-8">Belum ada data pendaftar.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="12" class="text-center py-8">Belum ada data pendaftar.</td></tr>`;
         return;
       }
 
@@ -217,6 +218,7 @@
           <td class="font-semibold">${peserta.nama || '-'}</td>
           <td>${peserta.asalSekolah || '-'}</td>
           <td><a href="https://wa.me/${peserta.telepon ? String(peserta.telepon).replace(/^0/, '62') : ''}" target="_blank" class="text-blue-600 hover:underline">${peserta.telepon || '-'}</a></td>
+          <td>${peserta.jenisKelamin || '-'}</td>
           <td>${peserta.tempatLahir || '-'}</td>
           <td>${peserta.usia ? peserta.usia + ' thn' : '-'}</td>
           <td style="white-space: nowrap;">${peserta.tinggi ? peserta.tinggi + ' cm' : '-'} / ${peserta.berat ? peserta.berat + ' kg' : '-'}</td>
@@ -232,25 +234,34 @@
     }
 
     function updateStatus(nik, statusBaru) {
-      // 1. Optimistic UI Update (Berubah instan di layar tanpa loading)
+      let alasan = "";
+      
+      // Minta alasan jika Tidak Lolos
+      if (statusBaru === 'Tidak Lolos') {
+          alasan = prompt(`Masukkan ALASAN kenapa peserta (NIK: ${nik}) Tidak Lolos:\n(Boleh dikosongkan)`);
+          if (alasan === null) return; // Batal jika menekan tombol Cancel
+      } else {
+          // Jika Lolos, hapus alasan
+          alasan = "-"; 
+      }
+
+      // Optimistic UI Update 
       const badge = document.getElementById(`badge-${nik}`);
       if (!badge) return;
 
-      // Simpan state lama untuk rollback jika internet putus/error
       const oldStatus = badge.textContent;
       const oldClass = badge.className;
 
-      // Ubah UI seketika
       badge.textContent = statusBaru;
       badge.className = `status-badge ${statusBaru.toLowerCase() === 'lolos' ? 'badge-lolos' : 'badge-gagal'}`;
 
-      // 2. Background Process (Menulis ke Google Sheets diam-diam)
       const payload = {
         action: 'updateStatus',
         username: sessionStorage.getItem('adminUser'),
         password: sessionStorage.getItem('adminPass'),
         nik: nik,
-        status: statusBaru
+        status: statusBaru,
+        alasan: alasan // Kirim alasan ke Google Script
       };
 
       fetch(gasBaseUrl, { 
@@ -265,16 +276,13 @@
               if (!result.success) {
                   throw new Error(result.message);
               }
-              // Jika sukses, biarkan saja (karena UI sudah berubah duluan)
           } catch (e) {
-              // Rollback UI jika gagal di server
               badge.textContent = oldStatus;
               badge.className = oldClass;
               console.error("Gagal simpan ke database:", e.message);
           }
       })
       .catch(error => {
-          // Rollback UI jika error jaringan/koneksi
           badge.textContent = oldStatus;
           badge.className = oldClass;
           console.error("Background Fetch Error:", error);
