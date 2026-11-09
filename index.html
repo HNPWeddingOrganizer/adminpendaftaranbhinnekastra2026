@@ -57,13 +57,11 @@
 </head>
 <body>
 
-  <!-- Loading Overlay -->
   <div class="loading-overlay" id="loadingOverlay">
     <div class="spinner mb-4"></div>
     <p class="font-semibold" style="color: var(--color-primary)">Memproses data...</p>
   </div>
 
-  <!-- Admin Login -->
   <div id="adminLoginScreen">
     <div class="auth-container text-center">
       <img src="https://upload.wikimedia.org/wikipedia/commons/3/36/Logo_DPPI.png" alt="Logo" class="mx-auto w-20 h-20 mb-4 object-contain">
@@ -77,7 +75,6 @@
     </div>
   </div>
 
-  <!-- Admin Dashboard -->
   <div id="adminDashboard">
     <div class="header-bar">
       <div>
@@ -102,24 +99,21 @@
           </tr>
         </thead>
         <tbody id="tableBody">
-          <!-- Data rows akan dimasukkan di sini via JS -->
+          <!-- Data disuntikkan via JS -->
         </tbody>
       </table>
     </div>
   </div>
 
   <script>
-    // SESUAIKAN DENGAN URL APPS SCRIPT ANDA
     const gasBaseUrl = 'https://script.google.com/macros/s/AKfycbyQbJlpjCkq95mytNJsqadbPQgf7t57zMyiRZ-lZT1L4vApW29OO69BGwEoGJrHFiKs/exec';
     
-    // Cek Sesi Admin saat halaman dimuat
     document.addEventListener('DOMContentLoaded', () => {
       if (sessionStorage.getItem('adminAuth') === 'true') {
         showDashboard();
       }
     });
 
-    // Handle Login Form
     document.getElementById('adminLoginForm').addEventListener('submit', function(e) {
       e.preventDefault();
       const user = document.getElementById('adminUser').value;
@@ -154,7 +148,7 @@
       document.getElementById('loadingOverlay').style.display = show ? 'flex' : 'none';
     }
 
-    // Mengambil data dari Apps Script
+    // Fungsi Fetch dengan Robust Error Handling
     async function fetchDataPeserta() {
       showLoading(true);
       const payload = {
@@ -164,9 +158,22 @@
       };
 
       try {
-        const response = await fetch(gasBaseUrl, { method: 'POST', body: JSON.stringify(payload) });
-        const result = await response.json();
+        const response = await fetch(gasBaseUrl, { 
+            method: 'POST', 
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify(payload) 
+        });
         
+        const textResponse = await response.text();
+        
+        let result;
+        try {
+            result = JSON.parse(textResponse);
+        } catch (jsonError) {
+            console.error("Respons dari server bukan JSON:", textResponse);
+            throw new Error("Server Google merespons dengan Error HTML. Cek Console Browser (F12).");
+        }
+
         if (result.success) {
           renderTable(result.data);
         } else {
@@ -174,12 +181,12 @@
           logoutAdmin();
         }
       } catch (error) {
-        alert("Gagal terhubung ke server.");
+        console.error("Fetch API Error:", error);
+        alert("Gagal memuat data: " + error.message);
       }
       showLoading(false);
     }
 
-    // Menampilkan data ke dalam tabel
     function renderTable(data) {
       const tbody = document.getElementById('tableBody');
       tbody.innerHTML = '';
@@ -190,9 +197,8 @@
       }
 
       data.forEach((peserta, index) => {
-        // Tentukan styling badge berdasarkan status
         let badgeClass = 'badge-pending';
-        let statusText = peserta.status.trim();
+        let statusText = peserta.status ? peserta.status.trim() : '';
         
         if (statusText.toLowerCase() === 'lolos' || statusText.toLowerCase() === 'terverifikasi') {
           badgeClass = 'badge-lolos';
@@ -206,9 +212,9 @@
           <td class="font-medium">${peserta.nik}</td>
           <td class="font-semibold">${peserta.nama}</td>
           <td>${peserta.asalSekolah}</td>
-          <td><a href="https://wa.me/${peserta.telepon.replace(/^0/, '62')}" target="_blank" class="text-blue-600 hover:underline">${peserta.telepon}</a></td>
+          <td><a href="https://wa.me/${peserta.telepon ? peserta.telepon.replace(/^0/, '62') : ''}" target="_blank" class="text-blue-600 hover:underline">${peserta.telepon}</a></td>
           <td><a href="${peserta.fileBukti}" target="_blank" class="text-blue-600 hover:underline">Lihat File</a></td>
-          <td><span class="status-badge ${badgeClass}">${peserta.status}</span></td>
+          <td><span class="status-badge ${badgeClass}">${statusText}</span></td>
           <td>
             <button class="btn-action btn-lolos" onclick="updateStatus('${peserta.nik}', 'Lolos')">Lolos</button>
             <button class="btn-action btn-gagal" onclick="updateStatus('${peserta.nik}', 'Tidak Lolos')">Tidak Lolos</button>
@@ -218,9 +224,8 @@
       });
     }
 
-    // Mengubah Status Peserta
     async function updateStatus(nik, statusBaru) {
-      if (!confirm(`Yakin ingin mengubah status peserta dengan NIK ${nik} menjadi ${statusBaru}?`)) return;
+      if (!confirm(`Yakin ingin mengubah status peserta NIK ${nik} menjadi ${statusBaru}?`)) return;
 
       showLoading(true);
       const payload = {
@@ -232,17 +237,31 @@
       };
 
       try {
-        const response = await fetch(gasBaseUrl, { method: 'POST', body: JSON.stringify(payload) });
-        const result = await response.json();
+        const response = await fetch(gasBaseUrl, { 
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify(payload) 
+        });
+        
+        const textResponse = await response.text();
+        
+        let result;
+        try {
+            result = JSON.parse(textResponse);
+        } catch (jsonError) {
+            console.error("Respons dari server bukan JSON:", textResponse);
+            throw new Error("Server Google merespons dengan Error HTML. Cek Console Browser (F12).");
+        }
         
         if (result.success) {
           alert("Status berhasil diubah!");
-          fetchDataPeserta(); // Refresh tabel setelah update
+          fetchDataPeserta(); 
         } else {
           alert("Gagal merubah status: " + result.message);
         }
       } catch (error) {
-        alert("Gagal terhubung ke server.");
+        console.error("Fetch API Error:", error);
+        alert("Gagal memproses ke server: " + error.message);
       }
       showLoading(false);
     }
