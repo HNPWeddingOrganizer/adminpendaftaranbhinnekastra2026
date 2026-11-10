@@ -200,6 +200,26 @@
                       <i class="fas fa-eye"></i> Buka Berkas
                   </button>
               </div>
+              
+              <div class="bg-pink-50 border border-pink-200 rounded-xl p-4 flex justify-between items-center mb-4">
+                  <div>
+                      <span class="detail-label text-pink-700">Bukti Instagram</span>
+                      <p class="text-xs text-pink-600 mt-1">Follow @dppi.kotayogyakarta</p>
+                  </div>
+                  <button id="btnLihatIG" class="bg-pink-600 hover:bg-pink-700 text-white px-4 py-2 rounded-lg text-xs font-bold shadow transition flex items-center gap-2">
+                      <i class="fas fa-eye"></i> Buka IG
+                  </button>
+              </div>
+
+              <div class="bg-slate-900 border border-slate-700 rounded-xl p-4 flex justify-between items-center mb-4">
+                  <div>
+                      <span class="detail-label text-white">Bukti TikTok</span>
+                      <p class="text-xs text-slate-300 mt-1">Follow @dppi.kotayogyakarta</p>
+                  </div>
+                  <button id="btnLihatTikTok" class="bg-slate-700 hover:bg-slate-600 border border-slate-500 text-white px-4 py-2 rounded-lg text-xs font-bold shadow transition flex items-center gap-2">
+                      <i class="fas fa-eye"></i> Buka TikTok
+                  </button>
+              </div>
 
               <div class="bg-gray-50 border border-gray-200 rounded-xl p-4 flex justify-between items-center">
                   <div>
@@ -339,7 +359,7 @@
   </div>
 
   <script>
-    const gasBaseUrl = 'https://script.google.com/macros/s/AKfycbyG1Rw1OZglHeiUqlKzJxrtqLhuz4IgR-CQOCIP0wYWKbJXQCXnfdGHw8wOma11PXo/exec';
+    const gasBaseUrl = 'https://script.google.com/macros/s/AKfycbw5EOmKmc5Vf_uO6T4K1q2wiLucQbd8DNKYaQbCwMMbDjDp2cLYsFOHVN-1g7iD_c-g/exec';
     
     let allData = []; 
     let activeStatusFilter = 'all'; 
@@ -627,15 +647,30 @@
             document.getElementById('mWaLink').href = 'https://wa.me/' + num;
         }
 
-        const btnBerkas = document.getElementById('btnLihatBerkas');
+       const btnBerkas = document.getElementById('btnLihatBerkas');
         if (p.fileBukti) {
             btnBerkas.onclick = () => openFileViewer(p.fileBukti);
-            btnBerkas.disabled = false;
-            btnBerkas.style.opacity = '1';
+            btnBerkas.disabled = false; btnBerkas.style.opacity = '1';
         } else {
-            btnBerkas.onclick = null;
-            btnBerkas.disabled = true;
-            btnBerkas.style.opacity = '0.5';
+            btnBerkas.onclick = null; btnBerkas.disabled = true; btnBerkas.style.opacity = '0.5';
+        }
+
+        // Logic Bukti IG
+        const btnIG = document.getElementById('btnLihatIG');
+        if (p.fileIG) {
+            btnIG.onclick = () => openFileViewer(p.fileIG);
+            btnIG.disabled = false; btnIG.style.opacity = '1';
+        } else {
+            btnIG.onclick = null; btnIG.disabled = true; btnIG.style.opacity = '0.5';
+        }
+
+        // Logic Bukti TikTok
+        const btnTikTok = document.getElementById('btnLihatTikTok');
+        if (p.fileTikTok) {
+            btnTikTok.onclick = () => openFileViewer(p.fileTikTok);
+            btnTikTok.disabled = false; btnTikTok.style.opacity = '1';
+        } else {
+            btnTikTok.onclick = null; btnTikTok.disabled = true; btnTikTok.style.opacity = '0.5';
         }
 
         renderStatusBadgeModal(p.status, p.alasan);
