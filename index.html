@@ -579,14 +579,23 @@
 
     function logoutAdmin() {
       sessionStorage.removeItem('adminAuth');
-      document.getElementById('adminDashboard').style.display = 'none';
+      
+      // Sembunyikan Dashboard, tampilkan Login Screen
+      document.getElementById('adminDashboard').classList.add('hidden');
+      document.getElementById('adminDashboard').classList.remove('flex');
+      
       document.getElementById('adminLoginScreen').style.display = 'flex';
       document.getElementById('adminLoginForm').reset();
     }
 
     function showDashboard() {
+      // Sembunyikan Login Screen
       document.getElementById('adminLoginScreen').style.display = 'none';
-      document.getElementById('adminDashboard').style.display = 'block';
+      
+      // Tampilkan Dashboard dengan Flexbox Tailwind
+      document.getElementById('adminDashboard').classList.remove('hidden');
+      document.getElementById('adminDashboard').classList.add('flex');
+      
       fetchDataPeserta();
     }
 
