@@ -811,11 +811,15 @@
       }).then(res => res.text()).catch(e => console.error(e));
     }
 
-    function toggleSidebar() {
+   function toggleSidebar() {
         const sidebar = document.getElementById('sidebar');
+        
+        // 1. Berfungsi menggeser sidebar ke luar layar pada tampilan HP (Mobile)
         sidebar.classList.toggle('-translate-x-full');
+        
+        // 2. Berfungsi menarik sidebar ke kiri hingga mengecil/hilang pada tampilan PC (Desktop)
+        sidebar.classList.toggle('md:-ml-64');
     }
-
     function switchTab(tabId) {
         document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
         document.querySelectorAll('.tab-menu').forEach(el => {
