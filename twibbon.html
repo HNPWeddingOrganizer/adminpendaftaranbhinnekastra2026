@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pasang Twibbon - BHINNEKASTRA DPPI</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <style>
+    body { background-color: #F9F1E2; }
+    .canvas-container {
+      position: relative;
+      width: 100%;
+      max-width: 400px;
+      aspect-ratio: 1/1;
+      margin: 0 auto;
+      overflow: hidden;
+      border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      background: #eee;
+    }
+    canvas {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      cursor: move;
+    }
+    .frame-overlay {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none; /* Penting: agar klik diteruskan ke canvas di bawahnya */
+      background-size: cover;
+      background-position: center;
+    }
+  </style>
+</head>
+<body class="p-4 md:p-10 text-[#543A2A]" onload="initTwibbon()">
+
+  <div class="max-w-4xl mx-auto bg-white p-6 md:p-10 rounded-3xl shadow-xl flex flex-col md:flex-row gap-8">
+    
+    <!-- Bagian Editor Twibbon -->
+    <div class="flex-1 text-center">
+      <h2 class="text-2xl font-bold text-[#A3496C] mb-4">Buat Twibbon Anda</h2>
+      
+      <div class="canvas-container" id="twibbonArea">
+        <canvas id="userCanvas"></canvas>
+        <div id="frameOverlay" class="frame-overlay"></div>
+      </div>
+
+      <div class="mt-6 flex flex-col gap-3">
+        <label for="uploadFoto" class="bg-gray-800 text-white px-6 py-3 rounded-xl font-bold cursor-pointer hover:bg-gray-700 transition">
+          <i class="fas fa-upload mr-2"></i> Pilih Foto Anda
+        </label>
+        <input type="file" id="uploadFoto" accept="image/*" class="hidden" onchange="handleImage(event)">
+        
+        <div class="flex items-center gap-4 bg-gray-50 p-3 rounded-xl border border-gray-200">
+            <i class="fas fa-search-minus"></i>
+            <input type="range" id="zoomSlider" min="0.1" max="3" step="0.1" value="1" class="w-full" oninput="updateZoom()">
+            <i class="fas fa-search-plus"></i>
+        </div>
+
+        <button onclick="downloadTwibbon()" class="bg-[#A3496C] text-white px-6 py-3 rounded-xl font-bold hover:bg-[#853A55] transition">
+          <i class="fas fa-download mr-2"></i> Unduh Hasil Twibbon
+        </button>
+      </div>
+    </div>
+
+    <!-- Bagian Caption -->
+    <div class="flex-1 flex flex-col">
+      <h3 class="text-xl font-bold mb-3">Caption Media Sosial</h3>
+      <p class="text-sm text-gray-500 mb-2">Salin teks di bawah ini dan gunakan saat memposting Twibbon Anda ke Instagram/TikTok.</p>
+      
+      <textarea id="captionText" class="w-full flex-1 border border-gray-300 rounded-xl p-4 text-sm bg-gray-50" readonly>Memuat caption...</textarea>
+      
+      <button onclick="copyCaption()" class="mt-4 border-2 border-[#A3496C] text-[#A3496C] px-6 py-3 rounded-xl font-bold hover:bg-[#F9F1E2] transition">
+        <i class="fas fa-copy mr-2"></i> Salin Caption
+      </button>
+      <a href="detail.html" class="mt-4 text-center text-sm font-bold text-gray-500 hover:text-gray-800 underline">Kembali ke Dashboard</a>
+    </div>
+
+  </div>
+
+  <script>
+    const gasBaseUrl = 'https://script.google.com/macros/s/AKfycbwyxqw4jZZSRrjpEYgkI-ebgo82SXLK1SYcfnNP7RjN1bKdLGO211DVSuoYHpvCeLwa/exec'; 
+    let frameImgUrl = '';
+    
+    // Canvas Variabel
+    const canvas = document.getElementById('userCanvas');
+    const ctx = canvas.getContext('2d');
+    let img = new Image();
+    let imgX = 0, imgY = 0, scale = 1, isDragging = false, startX, startY;
+
+    async function initTwibbon() {
+        // Ambil Config dari Server
+        try {
+            const response = await fetch(gasBaseUrl, { method: 'POST', body: JSON.stringify({ action: 'getTwibbon' }) });
+            const result = await response.json();
+            if (result.success) {
+                // Konversi URL Google Drive ke format Thumbnail agar bisa dirender/dihindari masalah CORS Canvas
+                let rawUrl = result.frameUrl;
+                let frameUrl = rawUrl;
+                const match = rawUrl.match(/\/file\/d\/([a-zA-Z0-9_-]+)/) || rawUrl.match(/id=([a-zA-Z0-9_-]+)/);
+                if (match && match[1]) {
+                    frameUrl = `https://drive.google.com/thumbnail?id=${match[1]}&sz=w1000`; // Resolusi tinggi
+                }
+                document.getElementById('frameOverlay').style.backgroundImage = `url('${frameUrl}')`;
+                frameImgUrl = frameUrl;
+                document.getElementById('captionText').value = result.caption;
+            }
+        } catch (e) {
+            document.getElementById('captionText').value = "Gagal memuat caption.";
+        }
+
+        // Setup Canvas Ukuran 1080x1080 untuk hasil HD
+        canvas.width = 1080;
+        canvas.height = 1080;
+        
+        // Mouse/Touch Events untuk drag foto
+        canvas.addEventListener('mousedown', dragStart);
+        canvas.addEventListener('mousemove', drag);
+        canvas.addEventListener('mouseup', dragEnd);
+        canvas.addEventListener('touchstart', (e) => dragStart(e.touches[0]));
+        canvas.addEventListener('touchmove', (e) => { e.preventDefault(); drag(e.touches[0]); }, {passive: false});
+        canvas.addEventListener('touchend', dragEnd);
+    }
+
+    function handleImage(e) {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            img.onload = function() {
+                // Reset posisi ke tengah
+                scale = Math.max(canvas.width / img.width, canvas.height / img.height);
+                document.getElementById('zoomSlider').value = scale;
+                imgX = (canvas.width - img.width * scale) / 2;
+                imgY = (canvas.height - img.height * scale) / 2;
+                draw();
+            }
+            img.src = event.target.result;
+        }
+        reader.readAsDataURL(e.target.files[0]);
+    }
+
+    function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        if (img.src) {
+            ctx.drawImage(img, imgX, imgY, img.width * scale, img.height * scale);
+        }
+    }
+
+    function updateZoom() {
+        if (!img.src) return;
+        scale = parseFloat(document.getElementById('zoomSlider').value);
+        draw();
+    }
+
+    // Drag Logic
+    function dragStart(e) { isDragging = true; startX = e.clientX - imgX; startY = e.clientY - imgY; }
+    function drag(e) {
+        if (!isDragging) return;
+        imgX = e.clientX - startX;
+        imgY = e.clientY - startY;
+        draw();
+    }
+    function dragEnd() { isDragging = false; }
+
+    function copyCaption() {
+        const copyText = document.getElementById("captionText");
+        copyText.select();
+        copyText.setSelectionRange(0, 99999); 
+        navigator.clipboard.writeText(copyText.value);
+        alert("Caption disalin!");
+    }
+
+    function downloadTwibbon() {
+        if (!img.src) return alert("Pilih foto terlebih dahulu!");
+        
+        // Membuat canvas gabungan sementara untuk menggabungkan foto + frame
+        const finalCanvas = document.createElement('canvas');
+        finalCanvas.width = 1080; finalCanvas.height = 1080;
+        const finalCtx = finalCanvas.getContext('2d');
+        
+        // Gambar foto pengguna (dari kanvas utama)
+        finalCtx.drawImage(canvas, 0, 0);
+        
+        // Gambar Frame di atasnya
+        const frameImg = new Image();
+        frameImg.crossOrigin = "Anonymous"; // Hindari taint canvas CORS
+        frameImg.onload = function() {
+            finalCtx.drawImage(frameImg, 0, 0, 1080, 1080);
+            
+            // Ekspor ke file download
+            const link = document.createElement('a');
+            link.download = 'Twibbon_Bhinnekastra.png';
+            link.href = finalCanvas.toDataURL('image/png');
+            link.click();
+        };
+        frameImg.src = frameImgUrl;
+    }
+  </script>
+</body>
+</html>
