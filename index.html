@@ -107,7 +107,7 @@
   <div class="modal-overlay" id="fileViewerOverlay">
       <div class="viewer-container">
           <div class="viewer-header">
-              <h3 class="font-bold text-sm"><i class="fas fa-file-alt text-blue-400 mr-2"></i> Pratinjau Berkas Bukti</h3>
+              <h3 class="font-bold text-sm"><i class="fas fa-file-alt text-blue-400 mr-2"></i> Pratinjau Berkas Bukti / Foto</h3>
               <button onclick="closeFileViewer()" class="text-red-400 hover:text-red-500 bg-red-400/10 px-3 py-1 rounded"><i class="fas fa-times"></i> Tutup</button>
           </div>
           <div class="relative w-full h-[calc(100%-48px)] bg-white flex justify-center items-center">
@@ -299,6 +299,7 @@
             <th>No</th>
             <th>Tgl Daftar</th>
             <th>Tgl Verifikasi</th> 
+            <th>Foto</th>
             <th>NIK</th>
             <th>Nama Lengkap</th>
             <th>Asal Instansi</th>
@@ -481,7 +482,7 @@
       tbody.innerHTML = '';
 
       if (data.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="12" class="text-center py-8 text-gray-500">Tidak ada data pendaftar yang sesuai.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="13" class="text-center py-8 text-gray-500">Tidak ada data pendaftar yang sesuai.</td></tr>`;
         return;
       }
 
@@ -509,11 +510,27 @@
         }
         let tglVerifikasi = peserta.waktuVerifikasi ? peserta.waktuVerifikasi : '-';
 
+        // --- LOGIKA FOTO ---
+        let urlFotoTabel = `https://placehold.co/100/F9F1E2/A3496C?text=${peserta.nama ? peserta.nama.charAt(0) : 'U'}`;
+        let urlFullFotoTabel = '';
+        if (peserta.fotoProfil && peserta.fotoProfil !== "") {
+            urlFullFotoTabel = peserta.fotoProfil;
+            const match = peserta.fotoProfil.match(/\/file\/d\/([a-zA-Z0-9_-]+)/) || peserta.fotoProfil.match(/id=([a-zA-Z0-9_-]+)/);
+            if (match && match[1]) {
+                urlFotoTabel = `https://drive.google.com/thumbnail?id=${match[1]}&sz=w100-h100`;
+            } else {
+                urlFotoTabel = peserta.fotoProfil;
+            }
+        }
+        const clickActionFoto = urlFullFotoTabel ? `onclick="openFileViewer('${urlFullFotoTabel}')"` : '';
+        const fotoHtml = `<img src="${urlFotoTabel}" alt="Foto" class="w-10 h-10 rounded-full object-cover border border-gray-300 ${urlFullFotoTabel ? 'cursor-pointer hover:opacity-80 transition' : ''}" ${clickActionFoto} title="${urlFullFotoTabel ? 'Klik untuk lihat detail foto' : 'Foto tidak tersedia'}">`;
+
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td>${index + 1}</td>
           <td class="text-xs text-gray-500 whitespace-nowrap">${tglDaftar}</td>
           <td class="text-xs text-emerald-600 font-medium whitespace-nowrap" id="waktu-verif-tabel-${peserta.nik}">${tglVerifikasi}</td>
+          <td>${fotoHtml}</td>
           <td class="font-medium">${peserta.nik || '-'}</td>
           <td class="font-semibold">${peserta.nama || '-'}</td>
           <td>${peserta.asalSekolah || '-'}</td>
@@ -561,8 +578,16 @@
             } else {
                 imgProfilModal.src = p.fotoProfil;
             }
+            // --- TAMBAHAN AGAR FOTO DI MODAL BISA DIKLIK ---
+            imgProfilModal.onclick = () => openFileViewer(p.fotoProfil);
+            imgProfilModal.classList.add('cursor-pointer', 'hover:opacity-80', 'transition');
+            imgProfilModal.title = "Klik untuk melihat pratinjau penuh";
         } else {
             imgProfilModal.src = `https://placehold.co/200/F9F1E2/A3496C?text=${p.nama ? p.nama.charAt(0) : 'U'}`;
+            // --- RESET EVENT JIKA FOTO KOSONG ---
+            imgProfilModal.onclick = null;
+            imgProfilModal.classList.remove('cursor-pointer', 'hover:opacity-80', 'transition');
+            imgProfilModal.title = "";
         }
 
         let detailWaktuDaftar = 'Tidak tersedia';
