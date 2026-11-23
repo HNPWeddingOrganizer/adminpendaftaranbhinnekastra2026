@@ -161,13 +161,13 @@
           </div>
           <div class="modal-body">
               <div class="detail-grid">
-                  <div class="detail-box">
+                 <div class="detail-box">
                       <span class="detail-label">Nama Lengkap</span>
-                      <span class="detail-value" id="mNama">-</span>
+                      <span class="detail-value uppercase" id="mNama">-</span>
                   </div>
                   <div class="detail-box">
                       <span class="detail-label">Asal Instansi</span>
-                      <span class="detail-value" id="mSekolah">-</span>
+                      <span class="detail-value uppercase" id="mSekolah">-</span>
                   </div>
                   <div class="detail-box">
                       <span class="detail-label">Nomor WA</span>
@@ -291,13 +291,13 @@
                               <label class="edit-label">NIK</label>
                               <input type="text" id="editNik" class="edit-input" required>
                           </div>
-                          <div>
+                       <div>
                               <label class="edit-label">Nama Lengkap</label>
-                              <input type="text" id="editNama" class="edit-input" required>
+                              <input type="text" id="editNama" class="edit-input uppercase" required>
                           </div>
                           <div>
                               <label class="edit-label">Asal Instansi / Sekolah</label>
-                              <input type="text" id="editSekolah" class="edit-input" required>
+                              <input type="text" id="editSekolah" class="edit-input uppercase" required>
                           </div>
                           <div>
                               <label class="edit-label">Nomor WhatsApp</label>
@@ -839,13 +839,13 @@
           <td class="text-xs text-emerald-600 font-medium whitespace-nowrap" id="waktu-verif-tabel-${safeNik}">${escapeHtml(tglVerifikasi)}</td>
           <td>${fotoHtml}</td>
           <td class="font-medium">${safeNik || '-'}</td>
-         <td>
-            <button type="button" onclick="openDetailModal('${safeNik}')" class="font-semibold text-left text-[#2D241F] hover:text-[#B05C36] hover:underline cursor-pointer transition" title="Klik untuk lihat detail peserta">
+        <td>
+            <button type="button" onclick="openDetailModal('${safeNik}')" class="uppercase font-semibold text-left text-[#2D241F] hover:text-[#B05C36] hover:underline cursor-pointer transition" title="Klik untuk lihat detail peserta">
               ${escapeHtml(peserta.nama || '-')}
             </button>
             ${logBadgeHtml}
           </td>
-          <td>${escapeHtml(peserta.asalSekolah || '-')}</td>
+          <td class="uppercase">${escapeHtml(peserta.asalSekolah || '-')}</td>
           <td class="text-center">${jkSingkat}</td>
           <td>${peserta.usia ? escapeHtml(peserta.usia) + ' Thn' : '-'}</td>
           <td class="whitespace-nowrap">${peserta.tinggi ? escapeHtml(peserta.tinggi) + 'cm' : '-'} / ${peserta.berat ? escapeHtml(peserta.berat) + 'kg' : '-'}</td>
@@ -910,7 +910,7 @@
           <td class="text-xs text-gray-600 whitespace-nowrap">${escapeHtml(item.waktu)}</td>
           <td class="font-semibold text-amber-800 whitespace-nowrap"><i class="fas fa-user-shield mr-1"></i> ${escapeHtml(item.admin)}</td>
           <td>
-           <button type="button" onclick="openDetailModal('${escapeHtml(item.nik)}')" class="font-semibold text-left text-[#2D241F] hover:text-[#B05C36] hover:underline cursor-pointer transition" title="Klik untuk lihat detail peserta">
+          <button type="button" onclick="openDetailModal('${escapeHtml(item.nik)}')" class="uppercase font-semibold text-left text-[#2D241F] hover:text-[#B05C36] hover:underline cursor-pointer transition" title="Klik untuk lihat detail peserta">
               ${escapeHtml(item.namaPeserta)}
             </button>
             <div class="text-xs text-gray-500">NIK: ${escapeHtml(item.nik)}</div>
