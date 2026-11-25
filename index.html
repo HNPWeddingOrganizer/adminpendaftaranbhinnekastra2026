@@ -3,16 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin Dashboard - BHINNEKASTRA DPPI 2026</title>
+  <title>Admin Dashboard - BHINNEKASTRA & TRIPATI DPPI 2026</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="icon" type="image/png" href="https://upload.wikimedia.org/wikipedia/commons/a/a0/Logo_dppi_512.png">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
- <script>
+  <script>
         // 1. Blokir Klik Kanan (Context Menu)
         document.addEventListener("contextmenu", e => e.preventDefault());
 
-        // 2. Blokir Shortcut Keyboard (F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+Shift+C, Ctrl+U, Ctrl+S)
+        // 2. Blokir Shortcut Keyboard
         document.onkeydown = function (e) {
             if (
                 e.keyCode === 123 ||
@@ -28,7 +28,7 @@
         setInterval(() => {
             try { (function () { return false; }['constructor']('debugger')()); } catch (e) { }
         }, 100);
-    </script>
+  </script>
   <style>
     :root {
         --bg-main: #F3EFE9;
@@ -50,10 +50,11 @@
     .btn-submit:hover { background: var(--color-primary-hover); }
     
     /* Dashboard Screen */
-    .header-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; background: var(--bg-card); padding: 20px 30px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid var(--border-color); }
+    .header-bar { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 24px; background: var(--bg-card); padding: 20px 30px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid var(--border-color); }
     .table-container { background: var(--bg-card); border-radius: 16px; overflow-x: auto; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid var(--border-color); }
-    table { width: 100%; border-collapse: collapse; min-width: 1320px; }
-    th { background: var(--color-primary); color: white; padding: 16px; text-align: left; font-size: 13px; font-weight: 600; white-space: nowrap; }
+    table { width: 100%; border-collapse: collapse; min-width: 1360px; }
+    th { background: var(--color-primary); color: white; padding: 16px; text-align: left; font-size: 13px; font-weight: 600; white-space: nowrap; transition: background 0.25s ease; }
+    table.tripati-table th { background: #3A221B; color: #F4D77D; }
     td { padding: 16px; border-bottom: 1px solid #eee; font-size: 13px; vertical-align: middle; }
     tr:hover { background: #fdfbf9; }
     
@@ -74,6 +75,9 @@
     .badge-pending { background: #FEF3C7; color: #D97706; }
     .badge-lolos { background: #D1FAE5; color: #059669; }
     .badge-gagal { background: #FEE2E2; color: #DC2626; }
+
+    .prog-badge-bhinn { background: #FCE7F3; color: #A3496C; border: 1px solid #FBCFE8; }
+    .prog-badge-tripati { background: #2D1E19; color: #F4D77D; border: 1px solid #C8963E; }
 
     /* Filter & Stat Cards */
     .stat-card { border: 2px solid transparent; transition: all 0.2s; }
@@ -153,7 +157,10 @@
               <div class="flex items-center gap-4">
                   <img id="mFotoProfil" src="https://placehold.co/100/eeeeee/999999?text=User" alt="Profil" class="w-14 h-14 rounded-full object-cover border border-gray-200 bg-white">
                   <div>
-                      <h2 class="text-lg font-bold text-gray-800">Detail Pendaftar</h2>
+                      <div class="flex items-center gap-2 flex-wrap">
+                          <h2 class="text-lg font-bold text-gray-800">Detail Pendaftar</h2>
+                          <span id="mProgramBadge" class="status-badge prog-badge-bhinn">Bhinnekastra</span>
+                      </div>
                       <p class="text-xs text-gray-500 mt-1" id="mNik">NIK: -</p>
                   </div>
               </div>
@@ -161,13 +168,17 @@
           </div>
           <div class="modal-body">
               <div class="detail-grid">
-                 <div class="detail-box">
+                  <div class="detail-box">
                       <span class="detail-label">Nama Lengkap</span>
                       <span class="detail-value uppercase" id="mNama">-</span>
                   </div>
                   <div class="detail-box">
                       <span class="detail-label">Asal Instansi</span>
                       <span class="detail-value uppercase" id="mSekolah">-</span>
+                  </div>
+                  <div class="detail-box col-span-2 bg-amber-50 border-amber-200" id="mKabupatenBox" style="display:none;">
+                      <span class="detail-label text-amber-800"><i class="fas fa-map-marker-alt mr-1"></i> Asal Kabupaten (Program Tripati)</span>
+                      <span class="detail-value uppercase text-amber-950" id="mKabupaten">-</span>
                   </div>
                   <div class="detail-box">
                       <span class="detail-label">Nomor WA</span>
@@ -283,6 +294,31 @@
                       <p class="text-[11px] text-amber-800 mt-1.5">Nama ini akan tersimpan di log informasi perubahan dan hanya dapat dilihat di halaman Admin.</p>
                   </div>
 
+                  <!-- Program & Asal Kabupaten -->
+                  <div>
+                      <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 border-b pb-1">Program Pendaftaran</h3>
+                      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                              <label class="edit-label">Program</label>
+                              <select id="editProgram" class="edit-input" onchange="toggleEditKabupatenField()">
+                                  <option value="Bhinnekastra">Bhinnekastra</option>
+                                  <option value="Tripati">Tripati</option>
+                              </select>
+                          </div>
+                          <div id="editKabupatenWrap" class="hidden">
+                              <label class="edit-label">Asal Kabupaten (Khusus Tripati)</label>
+                              <input type="text" id="editKabupaten" list="adminKabList" class="edit-input" placeholder="Contoh: Kabupaten Sleman">
+                              <datalist id="adminKabList">
+                                  <option value="Kota Yogyakarta">
+                                  <option value="Kabupaten Sleman">
+                                  <option value="Kabupaten Bantul">
+                                  <option value="Kabupaten Kulon Progo">
+                                  <option value="Kabupaten Gunungkidul">
+                              </datalist>
+                          </div>
+                      </div>
+                  </div>
+
                   <!-- Biodata & Akun -->
                   <div>
                       <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 border-b pb-1">Biodata & Akun Peserta</h3>
@@ -291,7 +327,7 @@
                               <label class="edit-label">NIK</label>
                               <input type="text" id="editNik" class="edit-input" required>
                           </div>
-                       <div>
+                          <div>
                               <label class="edit-label">Nama Lengkap</label>
                               <input type="text" id="editNama" class="edit-input uppercase" required>
                           </div>
@@ -414,9 +450,20 @@
             <button onclick="toggleSidebar()" class="md:hidden text-gray-500"><i class="fas fa-times"></i></button>
         </div>
         <div class="p-4 flex flex-col gap-2 flex-1">
-            <button onclick="switchTab('tabValidasi')" class="w-full text-left px-4 py-3 rounded-xl font-semibold bg-[#F3EFE9] text-[#B05C36] hover:bg-[#EAE4DB] transition tab-menu" id="menuValidasi"><i class="fas fa-users mr-2"></i> Validasi Peserta</button>
-            <button onclick="switchTab('tabLogEdit')" class="w-full text-left px-4 py-3 rounded-xl font-semibold text-gray-600 hover:bg-gray-100 transition tab-menu" id="menuLogEdit"><i class="fas fa-history mr-2"></i> Log Edit Admin</button>
-            <button onclick="switchTab('tabTwibbon')" class="w-full text-left px-4 py-3 rounded-xl font-semibold text-gray-600 hover:bg-gray-100 transition tab-menu" id="menuTwibbon"><i class="fas fa-image mr-2"></i> Atur Twibbon</button>
+            <button onclick="switchTab('tabBhinnekastra')" class="w-full text-left px-4 py-3 rounded-xl font-semibold bg-[#F3EFE9] text-[#B05C36] hover:bg-[#EAE4DB] transition tab-menu flex items-center justify-between" id="menuBhinnekastra">
+                <span><i class="fas fa-users mr-2"></i> Bhinnekastra</span>
+                <span id="sidebarCountBhinn" class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-white border border-gray-200 text-gray-700">0</span>
+            </button>
+            <button onclick="switchTab('tabTripati')" class="w-full text-left px-4 py-3 rounded-xl font-semibold text-gray-600 hover:bg-gray-100 transition tab-menu flex items-center justify-between" id="menuTripati">
+                <span><i class="fas fa-award mr-2"></i> Dashboard Tripati</span>
+                <span id="sidebarCountTripati" class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-900">0</span>
+            </button>
+            <button onclick="switchTab('tabLogEdit')" class="w-full text-left px-4 py-3 rounded-xl font-semibold text-gray-600 hover:bg-gray-100 transition tab-menu" id="menuLogEdit">
+                <i class="fas fa-history mr-2"></i> Log Edit Admin
+            </button>
+            <button onclick="switchTab('tabTwibbon')" class="w-full text-left px-4 py-3 rounded-xl font-semibold text-gray-600 hover:bg-gray-100 transition tab-menu" id="menuTwibbon">
+                <i class="fas fa-image mr-2"></i> Atur Twibbon
+            </button>
         </div>
         <div class="p-4 border-t border-gray-200">
             <button onclick="logoutAdmin()" class="w-full text-red-500 font-semibold px-4 py-2 hover:bg-red-50 rounded-xl"><i class="fas fa-sign-out-alt mr-2"></i> Keluar</button>
@@ -427,18 +474,23 @@
     <div class="flex-1 flex flex-col h-full overflow-hidden w-full relative">
         <div class="bg-white p-4 border-b border-gray-200 flex items-center justify-between shadow-sm z-10 w-full">
             <button onclick="toggleSidebar()" class="text-gray-600 p-2 rounded hover:bg-gray-100"><i class="fas fa-bars"></i></button>
-            <h1 class="font-bold text-lg text-gray-800">Dashboard DPPI</h1>
-            <div class="w-8"></div>
+            <h1 class="font-bold text-lg text-gray-800" id="topbarTitle">Dashboard Bhinnekastra</h1>
+            <button onclick="fetchDataPeserta()" class="text-xs font-semibold px-3 py-1.5 rounded-lg bg-[#F3EFE9] text-[#B05C36] hover:bg-[#EAE4DB] transition" title="Refresh Data">
+                <i class="fas fa-sync-alt mr-1"></i> Refresh
+            </button>
         </div>
 
         <div class="flex-1 overflow-y-auto p-4 md:p-6 w-full" id="mainContentArea">
             
-            <!-- TAB VALIDASI (Tabel Data, Filter, Statistik) -->
+            <!-- TAB VALIDASI (Digunakan untuk Dashboard Bhinnekastra & Dashboard Tripati) -->
             <div id="tabValidasi" class="tab-content block">
                 <div class="header-bar">
                     <div>
-                        <h1 class="text-2xl font-bold">Data Pendaftar Bhinnekastra</h1>
-                        <p class="text-sm" style="color: var(--text-muted);">Kelola status kelulusan dan edit data peserta seleksi.</p>
+                        <div class="flex items-center gap-2.5 flex-wrap">
+                            <h1 class="text-2xl font-bold" id="dashboardHeading">Data Pendaftar Bhinnekastra</h1>
+                            <span id="dashboardProgramTag" class="status-badge prog-badge-bhinn">Program Bhinnekastra</span>
+                        </div>
+                        <p class="text-sm mt-1" id="dashboardSubheading" style="color: var(--text-muted);">Kelola status kelulusan dan edit data peserta seleksi Bhinnekastra.</p>
                     </div>
                 </div>
 
@@ -465,12 +517,18 @@
                 <!-- FILTER SECTION -->
                 <div class="bg-white p-5 rounded-xl border border-gray-200 mb-6 shadow-sm">
                     <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
-                        <div class="md:col-span-4">
+                        <div class="md:col-span-3" id="searchColWrap">
                             <label class="text-xs font-semibold text-gray-500 uppercase mb-1 block">Pencarian</label>
                             <div class="relative">
                                 <i class="fas fa-search absolute left-3 top-2.5 text-gray-400 text-sm"></i>
-                                <input type="text" id="filterSearch" class="filter-input pl-9" placeholder="Nama, NIK, atau Instansi..." onkeyup="applyFilters()">
+                                <input type="text" id="filterSearch" class="filter-input pl-9" placeholder="Nama, NIK, Instansi..." onkeyup="applyFilters()">
                             </div>
+                        </div>
+                        <div class="md:col-span-2 hidden" id="filterKabupatenWrap">
+                            <label class="text-xs font-semibold text-amber-700 uppercase mb-1 block">Asal Kabupaten</label>
+                            <select id="filterKabupaten" class="filter-input" onchange="applyFilters()">
+                                <option value="all">Semua Kabupaten</option>
+                            </select>
                         </div>
                         <div class="md:col-span-2">
                             <label class="text-xs font-semibold text-gray-500 uppercase mb-1 block">Jenis Kelamin</label>
@@ -496,9 +554,9 @@
                                 <input type="number" id="bbMax" class="filter-input text-center px-1" placeholder="Max" onkeyup="applyFilters()" onchange="applyFilters()">
                             </div>
                         </div>
-                        <div class="md:col-span-2">
-                            <button onclick="resetFilters()" class="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 px-4 rounded-lg text-sm font-semibold transition border border-gray-200">
-                                <i class="fas fa-undo mr-1 text-xs"></i> Reset Filter
+                        <div class="md:col-span-1" id="resetFilterColWrap">
+                            <button onclick="resetFilters()" class="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 px-3 rounded-lg text-xs font-semibold transition border border-gray-200 whitespace-nowrap">
+                                <i class="fas fa-undo mr-1"></i> Reset
                             </button>
                         </div>
                     </div>
@@ -506,7 +564,7 @@
 
                 <!-- TABEL DATA -->
                 <div class="table-container">
-                  <table>
+                  <table id="pesertaMainTable">
                     <thead>
                       <tr>
                         <th>No</th>
@@ -516,6 +574,7 @@
                         <th>NIK</th>
                         <th>Nama Lengkap</th>
                         <th>Asal Instansi</th>
+                        <th id="thKabupaten" class="hidden">Asal Kabupaten</th>
                         <th>J.K</th>
                         <th>Usia</th>
                         <th>TB/BB</th>
@@ -524,9 +583,7 @@
                         <th class="text-center">Aksi</th>
                       </tr>
                     </thead>
-                    <tbody id="tableBody">
-                      <!-- Data disuntikkan via JS -->
-                    </tbody>
+                    <tbody id="tableBody"></tbody>
                   </table>
                 </div>
             </div>
@@ -536,14 +593,14 @@
                 <div class="header-bar">
                     <div>
                         <h1 class="text-2xl font-bold">Riwayat Log Edit Admin</h1>
-                        <p class="text-sm" style="color: var(--text-muted);">Catatan seluruh perubahan data peserta oleh admin. Data ini hanya terlihat di halaman Admin.</p>
+                        <p class="text-sm" style="color: var(--text-muted);">Catatan seluruh perubahan data peserta Bhinnekastra & Tripati oleh admin.</p>
                     </div>
                 </div>
 
                 <div class="bg-white p-4 rounded-xl border border-gray-200 mb-5 shadow-sm">
                     <div class="relative max-w-md">
                         <i class="fas fa-search absolute left-3 top-2.5 text-gray-400 text-sm"></i>
-                        <input type="text" id="filterLogSearch" class="filter-input pl-9" placeholder="Cari nama admin, nama peserta, atau NIK..." onkeyup="renderAllAdminLogs()">
+                        <input type="text" id="filterLogSearch" class="filter-input pl-9" placeholder="Cari nama admin, nama peserta, program, atau NIK..." onkeyup="renderAllAdminLogs()">
                     </div>
                 </div>
 
@@ -554,13 +611,12 @@
                                 <th>No</th>
                                 <th>Waktu Edit</th>
                                 <th>Nama Admin</th>
+                                <th>Program</th>
                                 <th>Peserta (NIK)</th>
                                 <th>Detail Perubahan</th>
                             </tr>
                         </thead>
-                        <tbody id="logTableBody">
-                            <!-- Diisi via JS -->
-                        </tbody>
+                        <tbody id="logTableBody"></tbody>
                     </table>
                 </div>
             </div>
@@ -598,9 +654,11 @@
   </div>
 
   <script>
-    const gasBaseUrl = 'https://script.google.com/macros/s/AKfycbxQ6qlShPfW7Z1nfR1rtzhmEByn8XfKx58I55qxnxR2KeDWtzElF9UK2g02COnXbjie/exec';
+    // GANTI DENGAN URL WEB APP TERBARU HASIL DEPLOY kode.gs
+    const gasBaseUrl = 'https://script.google.com/macros/s/AKfycbxZ_SOzSPOM55CQ1Y0hefDmfmA1a_a_80sTjB9I_z7RwUxtpCnDaXi2LsFRmKd2nr7Q/exec';
     
     let allData = []; 
+    let activeProgram = 'Bhinnekastra'; // 'Bhinnekastra' atau 'Tripati'
     let activeStatusFilter = 'all'; 
 
     function escapeHtml(str) {
@@ -610,6 +668,14 @@
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#39;');
+    }
+
+    function normalizeProgram(val) {
+      return String(val || '').trim().toLowerCase() === 'tripati' ? 'Tripati' : 'Bhinnekastra';
+    }
+
+    function getProgramData() {
+      return allData.filter(p => normalizeProgram(p.program) === activeProgram);
     }
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -645,6 +711,7 @@
       document.getElementById('adminLoginScreen').style.display = 'none';
       document.getElementById('adminDashboard').classList.remove('hidden');
       document.getElementById('adminDashboard').classList.add('flex');
+      updateProgramLayoutUI();
       fetchDataPeserta();
     }
 
@@ -670,7 +737,13 @@
         const result = await response.json();
 
         if (result.success) {
-          allData = result.data;
+          allData = (result.data || []).map(item => ({
+            ...item,
+            program: normalizeProgram(item.program),
+            asalKabupaten: item.asalKabupaten || '-'
+          }));
+          updateSidebarCounts();
+          populateKabupatenFilter();
           updateStatisticCards();
           applyFilters();
           renderAllAdminLogs();
@@ -684,13 +757,72 @@
       showLoading(false);
     }
 
+    function updateSidebarCounts() {
+      const countBhinn = allData.filter(p => normalizeProgram(p.program) === 'Bhinnekastra').length;
+      const countTripati = allData.filter(p => normalizeProgram(p.program) === 'Tripati').length;
+      document.getElementById('sidebarCountBhinn').textContent = countBhinn;
+      document.getElementById('sidebarCountTripati').textContent = countTripati;
+    }
+
+    function populateKabupatenFilter() {
+      const select = document.getElementById('filterKabupaten');
+      const prevVal = select.value;
+      const kabSet = new Set();
+
+      allData
+        .filter(p => normalizeProgram(p.program) === 'Tripati')
+        .forEach(p => {
+          const kab = String(p.asalKabupaten || '').trim();
+          if (kab && kab !== '-') kabSet.add(kab);
+        });
+
+      const sortedKab = Array.from(kabSet).sort((a, b) => a.localeCompare(b));
+      select.innerHTML = '<option value="all">Semua Kabupaten</option>' +
+        sortedKab.map(k => `<option value="${escapeHtml(k)}">${escapeHtml(k)}</option>`).join('');
+
+      if (Array.from(select.options).some(o => o.value === prevVal)) {
+        select.value = prevVal;
+      } else {
+        select.value = 'all';
+      }
+    }
+
+    function updateProgramLayoutUI() {
+      const isTripati = activeProgram === 'Tripati';
+      document.getElementById('topbarTitle').textContent = isTripati ? 'Dashboard Tripati' : 'Dashboard Bhinnekastra';
+      document.getElementById('dashboardHeading').textContent = isTripati ? 'Data Pendaftar Tripati' : 'Data Pendaftar Bhinnekastra';
+      document.getElementById('dashboardSubheading').textContent = isTripati
+        ? 'Kelola status kelulusan, filter asal kabupaten, dan edit data peserta Program Tripati.'
+        : 'Kelola status kelulusan dan edit data peserta seleksi Bhinnekastra.';
+
+      const tag = document.getElementById('dashboardProgramTag');
+      tag.textContent = isTripati ? 'Program Tripati' : 'Program Bhinnekastra';
+      tag.className = `status-badge ${isTripati ? 'prog-badge-tripati' : 'prog-badge-bhinn'}`;
+
+      document.getElementById('filterKabupatenWrap').classList.toggle('hidden', !isTripati);
+      document.getElementById('thKabupaten').classList.toggle('hidden', !isTripati);
+      document.getElementById('pesertaMainTable').classList.toggle('tripati-table', isTripati);
+
+      // Sesuaikan grid kolom pencarian agar tetap seimbang
+      const searchCol = document.getElementById('searchColWrap');
+      const resetCol = document.getElementById('resetFilterColWrap');
+      if (isTripati) {
+        searchCol.className = 'md:col-span-3';
+        resetCol.className = 'md:col-span-1';
+      } else {
+        searchCol.className = 'md:col-span-4';
+        resetCol.className = 'md:col-span-2';
+      }
+    }
+
     // --- LOGIKA STATISTIK & FILTERING ---
     function updateStatisticCards() {
-        const total = allData.length;
+        const list = getProgramData();
+        const total = list.length;
         let lolos = 0;
         let gagal = 0;
         
-        allData.forEach(p => {
+        list.forEach(p => {
             const s = p.status ? p.status.trim().toLowerCase() : '';
             if (s === 'lolos' || s === 'terverifikasi') lolos++;
             else if (s === 'tidak lolos' || s === 'gagal') gagal++;
@@ -719,6 +851,7 @@
 
     function resetFilters() {
         document.getElementById('filterSearch').value = '';
+        document.getElementById('filterKabupaten').value = 'all';
         document.getElementById('filterGender').value = 'all';
         document.getElementById('tbMin').value = '';
         document.getElementById('tbMax').value = '';
@@ -729,13 +862,14 @@
 
     function applyFilters() {
         const search = document.getElementById('filterSearch').value.toLowerCase();
+        const kabFilter = document.getElementById('filterKabupaten').value.toLowerCase();
         const gender = document.getElementById('filterGender').value.toLowerCase();
         const tbMin = parseInt(document.getElementById('tbMin').value) || 0;
         const tbMax = parseInt(document.getElementById('tbMax').value) || 9999;
         const bbMin = parseInt(document.getElementById('bbMin').value) || 0;
         const bbMax = parseInt(document.getElementById('bbMax').value) || 9999;
 
-        const filteredData = allData.filter(p => {
+        const filteredData = getProgramData().filter(p => {
             let s = p.status ? p.status.trim().toLowerCase() : 'menunggu verifikasi';
             let statusMatch = false;
             
@@ -746,8 +880,12 @@
             
             if (!statusMatch) return false;
 
-            const textGabung = `${p.nik} ${p.nama} ${p.asalSekolah}`.toLowerCase();
+            const textGabung = `${p.nik} ${p.nama} ${p.asalSekolah} ${p.asalKabupaten || ''}`.toLowerCase();
             if (search && !textGabung.includes(search)) return false;
+
+            if (activeProgram === 'Tripati' && kabFilter !== 'all') {
+                if (String(p.asalKabupaten || '').trim().toLowerCase() !== kabFilter) return false;
+            }
 
             if (gender !== 'all') {
                 const jk = (p.jenisKelamin || '').toLowerCase();
@@ -771,10 +909,11 @@
     // --- RENDER TABEL ---
     function renderTable(data) {
       const tbody = document.getElementById('tableBody');
+      const isTripati = activeProgram === 'Tripati';
       tbody.innerHTML = '';
 
       if (data.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="13" class="text-center py-8 text-gray-500">Tidak ada data pendaftar yang sesuai.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="${isTripati ? 14 : 13}" class="text-center py-8 text-gray-500">Tidak ada data pendaftar ${escapeHtml(activeProgram)} yang sesuai.</td></tr>`;
         return;
       }
 
@@ -799,11 +938,10 @@
         let tglDaftar = '-';
         if (peserta.timestamp) {
             const d = new Date(peserta.timestamp);
-            tglDaftar = d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }); 
+            tglDaftar = isNaN(d.getTime()) ? peserta.timestamp : d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }); 
         }
         let tglVerifikasi = peserta.waktuVerifikasi ? peserta.waktuVerifikasi : '-';
 
-        // Foto
         let urlFotoTabel = `https://placehold.co/100/F9F1E2/A3496C?text=${peserta.nama ? encodeURIComponent(peserta.nama.charAt(0)) : 'U'}`;
         let urlFullFotoTabel = '';
         if (peserta.fotoProfil && peserta.fotoProfil !== "") {
@@ -818,7 +956,6 @@
         const clickActionFoto = urlFullFotoTabel ? `onclick="openFileViewer('${escapeHtml(urlFullFotoTabel)}')"` : '';
         const fotoHtml = `<img src="${urlFotoTabel}" alt="Foto" class="w-10 h-10 rounded-full object-cover border border-gray-300 ${urlFullFotoTabel ? 'cursor-pointer hover:opacity-80 transition' : ''}" ${clickActionFoto} title="${urlFullFotoTabel ? 'Klik untuk lihat detail foto' : 'Foto tidak tersedia'}">`;
 
-        // Indikator Log Edit Admin
         const logs = Array.isArray(peserta.logEdit) ? peserta.logEdit : [];
         let logBadgeHtml = '';
         if (logs.length > 0) {
@@ -832,6 +969,10 @@
             `;
         }
 
+        const kabCellHtml = isTripati
+            ? `<td class="uppercase font-semibold text-amber-900">${escapeHtml(peserta.asalKabupaten || '-')}</td>`
+            : '';
+
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td>${index + 1}</td>
@@ -839,13 +980,14 @@
           <td class="text-xs text-emerald-600 font-medium whitespace-nowrap" id="waktu-verif-tabel-${safeNik}">${escapeHtml(tglVerifikasi)}</td>
           <td>${fotoHtml}</td>
           <td class="font-medium">${safeNik || '-'}</td>
-        <td>
+          <td>
             <button type="button" onclick="openDetailModal('${safeNik}')" class="uppercase font-semibold text-left text-[#2D241F] hover:text-[#B05C36] hover:underline cursor-pointer transition" title="Klik untuk lihat detail peserta">
               ${escapeHtml(peserta.nama || '-')}
             </button>
             ${logBadgeHtml}
           </td>
           <td class="uppercase">${escapeHtml(peserta.asalSekolah || '-')}</td>
+          ${kabCellHtml}
           <td class="text-center">${jkSingkat}</td>
           <td>${peserta.usia ? escapeHtml(peserta.usia) + ' Thn' : '-'}</td>
           <td class="whitespace-nowrap">${peserta.tinggi ? escapeHtml(peserta.tinggi) + 'cm' : '-'} / ${peserta.berat ? escapeHtml(peserta.berat) + 'kg' : '-'}</td>
@@ -885,6 +1027,7 @@
             combinedLogs.push({
               nik: p.nik,
               namaPeserta: p.nama,
+              program: normalizeProgram(p.program),
               admin: log.admin || '-',
               waktu: log.waktu || '-',
               perubahan: Array.isArray(log.perubahan) ? log.perubahan : []
@@ -895,12 +1038,12 @@
 
       const filtered = combinedLogs.filter(item => {
         if (!search) return true;
-        const txt = `${item.admin} ${item.namaPeserta} ${item.nik} ${item.perubahan.join(' ')}`.toLowerCase();
+        const txt = `${item.admin} ${item.namaPeserta} ${item.program} ${item.nik} ${item.perubahan.join(' ')}`.toLowerCase();
         return txt.includes(search);
       });
 
       if (filtered.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" class="text-center py-8 text-gray-500">Belum ada riwayat perubahan data oleh admin.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-gray-500">Belum ada riwayat perubahan data oleh admin.</td></tr>`;
         return;
       }
 
@@ -909,8 +1052,11 @@
           <td>${idx + 1}</td>
           <td class="text-xs text-gray-600 whitespace-nowrap">${escapeHtml(item.waktu)}</td>
           <td class="font-semibold text-amber-800 whitespace-nowrap"><i class="fas fa-user-shield mr-1"></i> ${escapeHtml(item.admin)}</td>
+          <td class="whitespace-nowrap">
+            <span class="status-badge ${item.program === 'Tripati' ? 'prog-badge-tripati' : 'prog-badge-bhinn'}">${escapeHtml(item.program)}</span>
+          </td>
           <td>
-          <button type="button" onclick="openDetailModal('${escapeHtml(item.nik)}')" class="uppercase font-semibold text-left text-[#2D241F] hover:text-[#B05C36] hover:underline cursor-pointer transition" title="Klik untuk lihat detail peserta">
+            <button type="button" onclick="openDetailModal('${escapeHtml(item.nik)}')" class="uppercase font-semibold text-left text-[#2D241F] hover:text-[#B05C36] hover:underline cursor-pointer transition" title="Klik untuk lihat detail peserta">
               ${escapeHtml(item.namaPeserta)}
             </button>
             <div class="text-xs text-gray-500">NIK: ${escapeHtml(item.nik)}</div>
@@ -928,6 +1074,19 @@
     function openDetailModal(nik) {
         const p = allData.find(x => String(x.nik) === String(nik));
         if (!p) return alert("Data tidak ditemukan");
+
+        const prog = normalizeProgram(p.program);
+        const progBadge = document.getElementById('mProgramBadge');
+        progBadge.textContent = prog;
+        progBadge.className = `status-badge ${prog === 'Tripati' ? 'prog-badge-tripati' : 'prog-badge-bhinn'}`;
+
+        const kabBox = document.getElementById('mKabupatenBox');
+        if (prog === 'Tripati') {
+            kabBox.style.display = 'block';
+            document.getElementById('mKabupaten').textContent = p.asalKabupaten || '-';
+        } else {
+            kabBox.style.display = 'none';
+        }
 
         document.getElementById('mNik').textContent = 'NIK: ' + p.nik;
         document.getElementById('mNama').textContent = p.nama || '-';
@@ -958,7 +1117,7 @@
         let detailWaktuDaftar = 'Tidak tersedia';
         if (p.timestamp) {
             const d = new Date(p.timestamp);
-            detailWaktuDaftar = d.toLocaleString('id-ID', { 
+            detailWaktuDaftar = isNaN(d.getTime()) ? p.timestamp : d.toLocaleString('id-ID', { 
                 day: '2-digit', month: 'short', year: 'numeric', 
                 hour: '2-digit', minute: '2-digit' 
             });
@@ -967,7 +1126,7 @@
         document.getElementById('mWaktuVerifikasi').textContent = p.waktuVerifikasi || 'Belum diverifikasi';
         
         if (p.telepon) {
-            const num = String(p.telepon).replace(/^0/, '62');
+            const num = String(p.telepon).replace(/\D/g, '').replace(/^0/, '62');
             document.getElementById('mWaLink').textContent = p.telepon;
             document.getElementById('mWaLink').href = 'https://wa.me/' + num;
         } else {
@@ -1001,7 +1160,6 @@
 
         renderStatusBadgeModal(p.status, p.alasan);
 
-        // Render Riwayat Log Edit pada Modal Detail
         const logs = Array.isArray(p.logEdit) ? p.logEdit : [];
         document.getElementById('mLogCountBadge').textContent = `${logs.length}x Edit`;
         const logContainer = document.getElementById('mLogEditList');
@@ -1031,13 +1189,30 @@
     function closeDetailModal() { document.getElementById('detailModal').style.display = 'none'; }
 
     // --- MODAL EDIT PESERTA ---
+    function toggleEditKabupatenField() {
+        const prog = document.getElementById('editProgram').value;
+        const wrap = document.getElementById('editKabupatenWrap');
+        const input = document.getElementById('editKabupaten');
+        if (prog === 'Tripati') {
+            wrap.classList.remove('hidden');
+            input.required = true;
+        } else {
+            wrap.classList.add('hidden');
+            input.required = false;
+        }
+    }
+
     function openEditModal(nik) {
         const p = allData.find(x => String(x.nik) === String(nik));
         if (!p) return alert("Data peserta tidak ditemukan.");
 
         document.getElementById('editPesertaForm').reset();
         document.getElementById('editOldNik').value = p.nik || '';
-        document.getElementById('editAdminName').value = ''; // Wajib diinput admin setiap kali edit
+        document.getElementById('editAdminName').value = '';
+
+        document.getElementById('editProgram').value = normalizeProgram(p.program);
+        document.getElementById('editKabupaten').value = (p.asalKabupaten && p.asalKabupaten !== '-') ? p.asalKabupaten : '';
+        toggleEditKabupatenField();
 
         document.getElementById('editNik').value = p.nik || '';
         document.getElementById('editNama').value = p.nama || '';
@@ -1112,6 +1287,14 @@
             return;
         }
 
+        const programVal = document.getElementById('editProgram').value;
+        const kabVal = programVal === 'Tripati' ? document.getElementById('editKabupaten').value.trim() : '-';
+        if (programVal === 'Tripati' && !kabVal) {
+            alert("Asal Kabupaten wajib diisi untuk peserta Tripati!");
+            document.getElementById('editKabupaten').focus();
+            return;
+        }
+
         const oldNik = document.getElementById('editOldNik').value.trim();
         showLoading(true, "Menyimpan perubahan & mencatat log admin...");
 
@@ -1129,6 +1312,8 @@
                 password: sessionStorage.getItem('adminPass'),
                 adminName: adminName,
                 oldNik: oldNik,
+                program: programVal,
+                asalKabupaten: kabVal,
                 nik: document.getElementById('editNik').value.trim(),
                 nama: document.getElementById('editNama').value.trim(),
                 asalSekolah: document.getElementById('editSekolah').value.trim(),
@@ -1159,6 +1344,8 @@
                 if (idx !== -1 && result.updatedData) {
                     allData[idx] = result.updatedData;
                 }
+                updateSidebarCounts();
+                populateKabupatenFilter();
                 updateStatisticCards();
                 applyFilters();
                 renderAllAdminLogs();
@@ -1262,23 +1449,44 @@
     function switchTab(tabId) {
         document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
         document.querySelectorAll('.tab-menu').forEach(el => {
-            el.classList.remove('bg-[#F3EFE9]', 'text-[#B05C36]');
+            el.classList.remove('bg-[#F3EFE9]', 'text-[#B05C36]', 'bg-[#2D1E19]', 'text-[#F4D77D]');
             el.classList.add('text-gray-600');
         });
-        
-        document.getElementById(tabId).classList.remove('hidden');
 
-        if (tabId === 'tabValidasi') {
-            document.getElementById('menuValidasi').classList.add('bg-[#F3EFE9]', 'text-[#B05C36]');
-            document.getElementById('menuValidasi').classList.remove('text-gray-600');
+        if (tabId === 'tabBhinnekastra') {
+            activeProgram = 'Bhinnekastra';
+            document.getElementById('tabValidasi').classList.remove('hidden');
+            document.getElementById('menuBhinnekastra').classList.add('bg-[#F3EFE9]', 'text-[#B05C36]');
+            document.getElementById('menuBhinnekastra').classList.remove('text-gray-600');
+            updateProgramLayoutUI();
+            resetFilters();
+            updateStatisticCards();
+        } else if (tabId === 'tabTripati') {
+            activeProgram = 'Tripati';
+            document.getElementById('tabValidasi').classList.remove('hidden');
+            document.getElementById('menuTripati').classList.add('bg-[#2D1E19]', 'text-[#F4D77D]');
+            document.getElementById('menuTripati').classList.remove('text-gray-600');
+            updateProgramLayoutUI();
+            populateKabupatenFilter();
+            resetFilters();
+            updateStatisticCards();
         } else if (tabId === 'tabLogEdit') {
+            document.getElementById('tabLogEdit').classList.remove('hidden');
             document.getElementById('menuLogEdit').classList.add('bg-[#F3EFE9]', 'text-[#B05C36]');
             document.getElementById('menuLogEdit').classList.remove('text-gray-600');
+            document.getElementById('topbarTitle').textContent = 'Riwayat Log Edit Admin';
             renderAllAdminLogs();
         } else {
+            document.getElementById('tabTwibbon').classList.remove('hidden');
             document.getElementById('menuTwibbon').classList.add('bg-[#F3EFE9]', 'text-[#B05C36]');
             document.getElementById('menuTwibbon').classList.remove('text-gray-600');
+            document.getElementById('topbarTitle').textContent = 'Pengaturan Twibbon';
             loadTwibbonData();
+        }
+
+        // Tutup sidebar otomatis di layar HP
+        if (window.innerWidth < 768) {
+            document.getElementById('sidebar').classList.add('-translate-x-full');
         }
     }
 
